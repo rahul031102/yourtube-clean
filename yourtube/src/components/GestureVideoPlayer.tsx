@@ -79,7 +79,7 @@ export default function GestureVideoPlayer({
     return y >= rect.height - controlHeight;
   }, []);
 
-  const getGestureZone = useCallback((zone: GestureZone, e: React.PointerEvent<HTMLDivElement>) => {
+  const getGestureZone = useCallback((zone: GestureZone, e: React.MouseEvent<HTMLDivElement> | React.PointerEvent<HTMLDivElement>) => {
     if (isControlRegion(e.clientY)) return null;
     return zone;
   }, [isControlRegion]);
