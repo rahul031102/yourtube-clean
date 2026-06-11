@@ -1,0 +1,13 @@
+node_modules/
+server/node_modules/
+yourtube/node_modules/
+
+.next/
+yourtube/.next/
+
+.env
+server/.env
+yourtube/.env.local
+
+uploads/
+server/uploads/
