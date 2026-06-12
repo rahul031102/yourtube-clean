@@ -7,6 +7,7 @@ import {
   History,
   User,
   Award,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -14,12 +15,27 @@ import { Button } from "./ui/button";
 import Channeldialogue from "./channeldialogue";
 import { useUser } from "@/lib/AuthContext";
 
-const Sidebar = () => {
-  const { user } = useUser();
+type SidebarProps = {
+  isOpen?: boolean;
+  onClose?: () => void;
+};
 
+const Sidebar = ({ isOpen = true, onClose }: SidebarProps) => {
+  const { user } = useUser();
   const [isdialogeopen, setisdialogeopen] = useState(false);
+
   return (
-    <aside className="w-64 bg-white  border-r min-h-screen p-2">
+    <aside
+      className={`fixed inset-y-0 left-0 z-50 w-[min(85vw,20rem)] bg-white border-r p-2 shadow-lg transition-transform duration-200 ease-in-out md:static md:translate-x-0 md:w-64 md:shadow-none ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2 md:hidden mb-4">
+        <span className="text-base font-semibold">Menu</span>
+        <Button variant="ghost" size="icon" onClick={onClose}>
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
       <nav className="space-y-1">
         <Link href="/">
           <Button variant="ghost" className="w-full justify-start">
