@@ -2,15 +2,15 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/router";
 import { getSocket } from "@/lib/socket";
 
 const buildIceConfig = (): RTCConfiguration => {
   const iceServers: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }];
   try {
-    const turnUrl = process.env.NEXT_PUBLIC_TURN_URL || (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_TURN_URL);
-    const turnUser = process.env.NEXT_PUBLIC_TURN_USER || (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_TURN_USER);
-    const turnPass = process.env.NEXT_PUBLIC_TURN_PASS || (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_TURN_PASS);
+    const turnUrl = process.env.NEXT_PUBLIC_TURN_URL || (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_TURN_URL);
+    const turnUser = process.env.NEXT_PUBLIC_TURN_USER || (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_TURN_USER);
+    const turnPass = process.env.NEXT_PUBLIC_TURN_PASS || (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_TURN_PASS);
     if (turnUrl) {
       const turn: RTCIceServer = { urls: turnUrl } as any;
       if (turnUser && turnPass) {
@@ -29,7 +29,8 @@ const VideoCallPage = ({ params }: any) => {
   const router = useRouter();
   const { id } = params || {};
   const localRef = useRef<HTMLVideoElement | null>(null);
-  const remoteRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const cameraTrackRef = useRef<MediaStreamTrack | null>(null);
@@ -43,38 +44,80 @@ const VideoCallPage = ({ params }: any) => {
   const [callSeconds, setCallSeconds] = useState(0);
   const callTimerRef = useRef<number | null>(null);
   const [connectionState, setConnectionState] = useState("new");
+  const [mode, setMode] = useState<"audio" | "video">("video");
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(true);
 
   useEffect(() => {
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams("");
+    const currentMode = params.get("mode") === "audio" ? "audio" : "video";
+    setMode(currentMode);
+    setRole(params.get("role"));
+    setRoomId(params.get("room") || id);
+  }, [id]);
+
+  useEffect(() => {
+    if (!roomId || !role) return;
+
     let mounted = true;
     const socket = getSocket();
+    const currentMode = mode;
+    const mediaConstraints = currentMode === "audio" ? { audio: true, video: false } : { audio: true, video: true };
 
-    const role = (new URLSearchParams(window.location.search)).get("role");
-    const roomParam = (new URLSearchParams(window.location.search)).get("room");
+    const cleanupPeer = () => {
+      if (pcRef.current) {
+        pcRef.current.getSenders().forEach((s) => s.track?.stop());
+        pcRef.current.close();
+        pcRef.current = null;
+      }
+      if (callTimerRef.current) {
+        clearInterval(callTimerRef.current);
+        callTimerRef.current = null;
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
+    };
 
     const setupPeerAndMedia = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
         if (!mounted) return;
-        if (localRef.current) {
+
+        localStreamRef.current = stream;
+        cameraTrackRef.current = currentMode === "video" ? stream.getVideoTracks()[0] || null : null;
+
+        if (currentMode === "video" && localRef.current) {
           localRef.current.srcObject = stream;
           localRef.current.muted = true;
           localRef.current.play().catch(() => {});
         }
 
-        localStreamRef.current = stream;
-        cameraTrackRef.current = stream.getVideoTracks()[0] || null;
-
+        setIsMuted(false);
+        setIsCameraOn(currentMode === "video");
         pcRef.current = new RTCPeerConnection(buildIceConfig());
         const pc = pcRef.current;
 
-        // add local tracks
         stream.getTracks().forEach((t) => pc.addTrack(t, stream));
 
         pc.ontrack = (ev) => {
           const [remoteStream] = ev.streams;
-          if (remoteRef.current) {
-            remoteRef.current.srcObject = remoteStream;
-            remoteRef.current.play().catch(() => {});
+          if (currentMode === "video") {
+            if (remoteVideoRef.current) {
+              remoteVideoRef.current.srcObject = remoteStream;
+              remoteVideoRef.current.play().catch(() => {});
+            }
+          } else {
+            if (remoteAudioRef.current) {
+              remoteAudioRef.current.srcObject = remoteStream;
+              remoteAudioRef.current.play().catch(() => {});
+            }
           }
         };
 
@@ -117,72 +160,48 @@ const VideoCallPage = ({ params }: any) => {
           }
         });
 
-        // join room
-        socket.emit("join-room", { roomId: roomParam || id });
+        socket.emit("join-room", { roomId });
         setConnected(true);
-        // start call timer
         callTimerRef.current = window.setInterval(() => setCallSeconds((s) => s + 1), 1000);
       } catch (err) {
         console.error("media error", err);
       }
     };
 
-    // If caller, wait for call-response; if callee or accepted, start immediately
+    const onResponse = ({ accepted, roomId: incomingRoom }: any) => {
+      if (accepted) {
+        setupPeerAndMedia();
+      } else {
+        alert("Call declined");
+        router.push("/");
+      }
+    };
+
     if (role === "caller") {
-      const onResponse = ({ accepted, roomId }: any) => {
-        if (accepted) {
-          setupPeerAndMedia();
-        } else {
-          // call declined
-          alert("Call declined");
-          router.push("/");
-        }
-      };
       socket.on("call-response", onResponse);
-      // cleanup
-      return () => {
-        mounted = false;
-        socket.off("call-response", onResponse);
-      };
     } else {
-      // callee or direct join
       setupPeerAndMedia();
     }
 
     return () => {
       mounted = false;
-      const socket = getSocket();
-      socket.emit("leave-room", { roomId: id });
+      socket.emit("leave-room", { roomId });
       socket.off("user-joined");
       socket.off("offer");
       socket.off("answer");
       socket.off("ice-candidate");
-      if (pcRef.current) {
-        pcRef.current.getSenders().forEach((s) => s.track?.stop());
-        pcRef.current.close();
-      }
-      if (callTimerRef.current) {
-        clearInterval(callTimerRef.current);
-        callTimerRef.current = null;
-      }
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
-      if (recorderRef.current && recorderRef.current.state !== "inactive") {
-        recorderRef.current.stop();
-      }
+      socket.off("call-response", onResponse);
+      cleanupPeer();
     };
-  }, [id]);
+  }, [id, roomId, role, mode, router]);
 
-  // handle remote ending the call
   useEffect(() => {
     const socket = getSocket();
     const onCallEnded = () => {
-      // stop and navigate home
       if (pcRef.current) {
         pcRef.current.getSenders().forEach((s) => s.track?.stop());
         pcRef.current.close();
+        pcRef.current = null;
       }
       if (callTimerRef.current) {
         clearInterval(callTimerRef.current);
@@ -194,20 +213,18 @@ const VideoCallPage = ({ params }: any) => {
     return () => {
       socket.off("call-ended", onCallEnded);
     };
-  }, []);
+  }, [router]);
 
   const startRecording = async () => {
     if (recording) return;
-    const remoteStream = remoteRef.current?.srcObject as MediaStream | null;
+    const remoteStream = (remoteVideoRef.current?.srcObject || remoteAudioRef.current?.srcObject) as MediaStream | null;
     const localStream = localStreamRef.current;
     const mixed = new MediaStream();
-    // prefer remote video if available
     if (remoteStream) {
       remoteStream.getVideoTracks().forEach((t) => mixed.addTrack(t));
     } else if (localStream) {
       localStream.getVideoTracks().forEach((t) => mixed.addTrack(t));
     }
-    // add audio tracks from both sides if available
     if (localStream) localStream.getAudioTracks().forEach((t) => mixed.addTrack(t));
     if (remoteStream) remoteStream.getAudioTracks().forEach((t) => mixed.addTrack(t));
 
@@ -216,7 +233,6 @@ const VideoCallPage = ({ params }: any) => {
     try {
       recorder = new MediaRecorder(mixed, options);
     } catch (e) {
-      // fallback
       recorder = new MediaRecorder(mixed as any);
     }
     recordedChunksRef.current = [];
@@ -225,21 +241,20 @@ const VideoCallPage = ({ params }: any) => {
     };
     recorder.onstop = () => {
       const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
-      // upload to server
       (async () => {
         try {
           const form = new FormData();
           form.append("recording", blob, `call-${Date.now()}.webm`);
-          const room = (new URLSearchParams(window.location.search)).get("room") || id;
+          const room = roomId || id;
           form.append("roomId", room || id);
-          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+          const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
           await fetch((process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000") + "/call/recording", {
-            method: 'POST',
+            method: "POST",
             body: form,
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           });
         } catch (e) {
-          console.warn('Upload failed', e);
+          console.warn("Upload failed", e);
         }
       })();
       setRecording(false);
@@ -261,10 +276,11 @@ const VideoCallPage = ({ params }: any) => {
 
   const endCall = () => {
     const socket = getSocket();
-    socket.emit("end-call", { roomId: (new URLSearchParams(window.location.search)).get("room") || id });
+    socket.emit("end-call", { roomId: roomId || id });
     if (pcRef.current) {
       pcRef.current.getSenders().forEach((s) => s.track?.stop());
       pcRef.current.close();
+      pcRef.current = null;
     }
     if (callTimerRef.current) {
       clearInterval(callTimerRef.current);
@@ -275,7 +291,7 @@ const VideoCallPage = ({ params }: any) => {
 
   const toggleScreenShare = async () => {
     const pc = pcRef.current;
-    if (!pc) return;
+    if (!pc || mode !== "video") return;
     if (!screenTrackRef.current) {
       try {
         const displayStream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true });
@@ -307,46 +323,85 @@ const VideoCallPage = ({ params }: any) => {
       <div className="max-w-5xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">Call ID: {id}</div>
-          <div className="text-sm text-gray-600">Status: {connectionState} • Duration: {Math.floor(callSeconds/60).toString().padStart(2,'0')}:{(callSeconds%60).toString().padStart(2,'0')}</div>
+          <div className="text-sm text-gray-600">
+            Mode: {mode === "audio" ? "Audio only" : "Video"} • Status: {connectionState} • Duration: {Math.floor(callSeconds / 60).toString().padStart(2, "0")}:{(callSeconds % 60).toString().padStart(2, "0")}
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(!connected && (new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('role')) === 'caller') ? (
+          {(!connected && role === "caller") ? (
             <div className="md:col-span-3 bg-gray-50 rounded-lg p-6 text-center">
               <div className="text-lg font-medium">Calling...</div>
               <div className="text-sm text-gray-600">Waiting for the recipient to accept the call.</div>
             </div>
           ) : null}
-          <div className="md:col-span-2 bg-black aspect-video rounded-lg flex items-center justify-center text-white">
-            <video ref={remoteRef} className="w-full h-full object-cover rounded-lg" playsInline />
+
+          <div className={`md:col-span-2 rounded-lg overflow-hidden ${mode === "video" ? "bg-black aspect-video" : "bg-gray-900 text-white"}`}>
+            {mode === "video" ? (
+              <video ref={remoteVideoRef} className="w-full h-full object-cover" playsInline autoPlay />
+            ) : (
+              <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 p-6">
+                <div className="text-xl font-semibold">Audio Call</div>
+                <div className="text-sm text-gray-300">Your audio connection is live.</div>
+                <audio ref={remoteAudioRef} autoPlay />
+              </div>
+            )}
           </div>
+
           <div className="space-y-4">
-            <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <video ref={localRef} className="w-full h-48 object-cover rounded" playsInline />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => {
-                const local = localStreamRef.current;
-                if (!local) return;
-                local.getAudioTracks().forEach(t => t.enabled = !t.enabled);
-                // re-render by toggling state
-                setConnected(s => s);
-              }}>{localStreamRef.current?.getAudioTracks()[0]?.enabled ? "Mute" : "Unmute"}</Button>
-              <Button onClick={() => {
-                const pc = pcRef.current;
-                if (pc) {
-                  const videoTrack = pc.getSenders().map(s => s.track).find(t => t?.kind === 'video');
-                  if (videoTrack) (videoTrack as MediaStreamTrack).enabled = !(videoTrack as MediaStreamTrack).enabled;
-                }
-              }}>{cameraTrackRef.current?.enabled ? "Camera Off" : "Camera On"}</Button>
-              <Button onClick={() => toggleScreenShare()}>Share Screen</Button>
+            {mode === "video" ? (
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <video ref={localRef} className="w-full h-48 object-cover rounded" playsInline muted autoPlay />
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-6 text-center">
+                <div className="text-sm font-medium text-gray-800">Mic active</div>
+                <div className="text-sm text-gray-500">You are connected in audio-only mode.</div>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => {
+                  const local = localStreamRef.current;
+                  if (!local) return;
+                  const currentAudioEnabled = local.getAudioTracks()[0]?.enabled ?? true;
+                  local.getAudioTracks().forEach((t) => (t.enabled = !currentAudioEnabled));
+                  setIsMuted(!currentAudioEnabled);
+                }}
+              >
+                {isMuted ? "Unmute" : "Mute"}
+              </Button>
+              {mode === "video" && (
+                <>
+                  <Button
+                    onClick={() => {
+                      const sender = pcRef.current?.getSenders().find((s) => s.track?.kind === "video");
+                      if (sender?.track) {
+                        const nextCameraOn = !(sender.track.enabled ?? false);
+                        sender.track.enabled = nextCameraOn;
+                        setIsCameraOn(nextCameraOn);
+                      }
+                    }}
+                  >
+                    {isCameraOn ? "Camera Off" : "Camera On"}
+                  </Button>
+                  <Button onClick={() => toggleScreenShare()}>Share Screen</Button>
+                </>
+              )}
               {!recording ? (
-                <Button onClick={() => startRecording()} className="bg-red-600 text-white">Record</Button>
+                <Button onClick={() => startRecording()} className="bg-red-600 text-white">
+                  Record
+                </Button>
               ) : (
-                <Button onClick={() => stopRecording()} className="bg-gray-800 text-white">Stop</Button>
+                <Button onClick={() => stopRecording()} className="bg-gray-800 text-white">
+                  Stop
+                </Button>
               )}
             </div>
             <div>
-              <Button variant="destructive" onClick={() => endCall()}>End Call</Button>
+              <Button variant="destructive" onClick={() => endCall()}>
+                End Call
+              </Button>
             </div>
           </div>
         </div>

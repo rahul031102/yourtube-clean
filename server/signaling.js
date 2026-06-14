@@ -86,7 +86,7 @@ export default function registerSignaling(io) {
     });
 
     // call request flow: caller -> server -> target (incoming-call)
-    socket.on("call-request", ({ targetUserId, roomId, fromUserId }) => {
+    socket.on("call-request", ({ targetUserId, roomId, fromUserId, mode }) => {
       // ensure caller is registered and matches the declared fromUserId
       if (!socket.data?.userId || socket.data.userId !== fromUserId) {
         socket.emit("call-error", { reason: "INVALID_CALLER" });
@@ -95,7 +95,7 @@ export default function registerSignaling(io) {
       // find socket for target
       const targetSocket = Array.from(io.sockets.sockets.values()).find(s => s.data?.userId === targetUserId);
       if (targetSocket) {
-        targetSocket.emit("incoming-call", { fromUserId, roomId });
+        targetSocket.emit("incoming-call", { fromUserId, roomId, mode });
       } else {
         // notify caller that target unavailable
         socket.emit("call-unavailable", { targetUserId });

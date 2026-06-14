@@ -3,12 +3,17 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { PhoneCall, VideoIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosinstance";
 import { getSocket } from "@/lib/socket";
 import { useUser } from "@/lib/AuthContext";
 
-export default function FriendsList() {
+interface FriendsListProps {
+  mode?: "audio" | "video";
+}
+
+export default function FriendsList({ mode = "video" }: FriendsListProps) {
   const router = useRouter();
   const { user } = useUser();
   const [calling, setCalling] = useState<string | null>(null);
@@ -36,23 +41,28 @@ export default function FriendsList() {
     };
   }, []);
 
-  const handleCall = (targetId: string) => {
+  const createRoomId = (targetId: string) => `${user?._id || "anon"}-${targetId}-${Date.now()}`;
+
+  const handleCall = (targetId: string, selectedMode: "audio" | "video") => {
     if (!user?._id) {
       router.push("/");
       return;
     }
     const socket = getSocket();
-    const roomId = `${user._id}-${targetId}-${Date.now()}`;
+    const roomId = createRoomId(targetId);
     setCalling(targetId);
-    socket.emit("call-request", { targetUserId: String(targetId), roomId, fromUserId: user._id });
-    router.push(`/call/${targetId}?role=caller&room=${roomId}`);
+    socket.emit("call-request", { targetUserId: String(targetId), roomId, fromUserId: user._id, mode: selectedMode });
+    router.push(`/call/${targetId}?role=caller&room=${roomId}&mode=${selectedMode}`);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Friends</h2>
-        <p className="text-sm text-gray-500">Tap a friend to start a call</p>
+        <div>
+          <h2 className="text-lg font-semibold">Friends</h2>
+          <p className="text-sm text-gray-500">Current mode: {mode === "audio" ? "Audio Call" : "Video Call"}</p>
+        </div>
+        <p className="text-sm text-gray-500">Tap an icon to start a call</p>
       </div>
 
       <div className="space-y-3">
@@ -73,12 +83,20 @@ export default function FriendsList() {
                 <div className="text-sm text-gray-500">{f.online ? "Online" : "Offline"}</div>
               </div>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleCall(String(f._id), "audio")}
+              >
+                <PhoneCall className="w-4 h-4" />
+              </Button>
               <Button
                 variant="ghost"
-                onClick={() => handleCall(String(f._id))}
+                size="icon"
+                onClick={() => handleCall(String(f._id), "video")}
               >
-                {calling === String(f._id) ? "Calling..." : "Call"}
+                <VideoIcon className="w-4 h-4" />
               </Button>
             </div>
           </div>

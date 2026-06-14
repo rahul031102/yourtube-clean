@@ -35,8 +35,8 @@ const Header = () => {
       socket.emit("register", { userId: user._id });
     }
 
-    const onIncoming = ({ fromUserId, roomId }: any) => {
-      setIncoming({ fromUserId, roomId });
+    const onIncoming = ({ fromUserId, roomId, mode }: any) => {
+      setIncoming({ fromUserId, roomId, mode });
     };
     socket.on("incoming-call", onIncoming);
     const onRegisterFailed = ({ reason }: any) => {
@@ -109,10 +109,10 @@ const Header = () => {
       <div className="flex items-center gap-2">
         {user ? (
           <>
-            <Button variant="ghost" size="icon" onClick={() => router.push("/calls") }>
+            <Button variant="ghost" size="icon" onClick={() => router.push("/calls?mode=audio") }>
               <PhoneCall className="w-6 h-6" />
             </Button>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => router.push("/calls?mode=video") }>
               <VideoIcon className="w-6 h-6" />
             </Button>
             <Button variant="ghost" size="icon">
@@ -196,7 +196,7 @@ const Header = () => {
                 const socket = getSocket();
                 socket.emit("call-response", { fromUserId: incoming.fromUserId, targetUserId: user?._id, accepted: true, roomId: incoming.roomId });
                 setIncoming(null);
-                router.push(`/call/${incoming.fromUserId}?role=callee&room=${incoming.roomId}`);
+                router.push(`/call/${incoming.fromUserId}?role=callee&room=${incoming.roomId}&mode=${incoming.mode || "video"}`);
               }}
             >
               Accept
