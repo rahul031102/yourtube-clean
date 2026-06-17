@@ -17,14 +17,20 @@ import paymentroutes from "./routes/payment.js";
 import callroutes from "./routes/call.js";
 
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  credentials: true,
+}));
+
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 app.use("/uploads", express.static(path.join("uploads")));
 app.get("/", (req, res) => {
   res.send("You tube backend is working");
 });
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 app.use("/user", userroutes);
 app.use("/video", videoroutes);
 app.use("/like", likeroutes);

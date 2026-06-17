@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: yourtube-backend
+    runtime: node
+    buildCommand: apt-get install -y ffmpeg && npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
