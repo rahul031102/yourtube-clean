@@ -1,4 +1,5 @@
-import { signInWithPopup, signOut } from "firebase/auth";
+// import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithRedirect, getRedirectResult, signOut } from "firebase/auth";
 import { useState } from "react";
 import { createContext } from "react";
 import { provider, auth } from "./firebase";
@@ -81,7 +82,8 @@ export const UserProvider = ({ children }) => {
 
   const handlegooglesignin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
+      // const result = await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
       const firebaseuser = result.user;
       const payload = {
         email: firebaseuser.email,

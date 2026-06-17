@@ -203,6 +203,7 @@ const VideoInfo = ({ video }: any) => {
       setIsDeleting(false);
     }
   };
+  console.log("user._id:", user?._id, "video.uploader:", video.uploader);
 
   return (
     <div className="space-y-4">
@@ -289,7 +290,7 @@ const VideoInfo = ({ video }: any) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {user?._id === video.uploader && (
+              {String(user?._id) === String(video.uploader) && (
                 <DropdownMenuItem
                   onClick={() => setShowDeleteDialog(true)}
                   className="text-red-600 cursor-pointer"

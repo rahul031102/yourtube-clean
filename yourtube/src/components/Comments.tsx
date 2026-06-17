@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
+import { ThumbsUp, ThumbsDown, Languages } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
@@ -265,7 +266,7 @@ const Comments = ({ videoId }: any) => {
 
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-muted-foreground italic">
             No comments yet. Be the first to comment!
           </p>
         ) : (
@@ -279,7 +280,7 @@ const Comments = ({ videoId }: any) => {
                   <AvatarFallback>{comment.usercommented?.[0] || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1 text-sm text-gray-600">
+                  <div className="flex flex-wrap items-center gap-2 mb-1 text-sm text-muted-foreground">
                     <span className="font-medium text-sm">{comment.usercommented}</span>
                     <span>•</span>
                     <span>{comment.city || "Unknown city"}</span>
@@ -313,11 +314,11 @@ const Comments = ({ videoId }: any) => {
                       </div>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-800">{comment.commentbody}</p>
+                    <p className="text-sm text-foreground">{comment.commentbody}</p>
                   )}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <button
-                      className="text-blue-600 hover:underline"
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-full px-3 py-1.5 transition-colors"
                       onClick={() =>
                         setCommentTranslationOpen((prev) => ({
                           ...prev,
@@ -325,29 +326,32 @@ const Comments = ({ videoId }: any) => {
                         }))
                       }
                     >
+                      <Languages className="w-4 h-4" />
                       {commentTranslationOpen[comment._id] ? "Hide translation" : "Show translation"}
                     </button>
                     <button
-                      className="text-blue-600 hover:underline disabled:cursor-not-allowed"
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-full px-3 py-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => handleReaction(comment._id, "like")}
                       disabled={!user || reactionLoading[comment._id]}
                       title={!user ? "Log in to like comments" : "Like comment"}
                     >
-                      👍 {comment.likes ?? 0}
+                      <ThumbsUp className="w-4 h-4" />
+                      {comment.likes ?? 0}
                     </button>
                     <button
-                      className="text-blue-600 hover:underline disabled:cursor-not-allowed"
+                      className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-full px-3 py-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => handleReaction(comment._id, "dislike")}
                       disabled={!user || reactionLoading[comment._id]}
                       title={!user ? "Log in to dislike comments" : "Dislike comment"}
                     >
-                      👎 {comment.dislikes ?? 0}
+                      <ThumbsDown className="w-4 h-4" />
+                      {comment.dislikes ?? 0}
                     </button>
                   </div>
                   {commentTranslationOpen[comment._id] && (
-                    <div className="mt-3 space-y-2 rounded-md bg-muted p-3 text-sm text-gray-700">
+                    <div className="mt-3 space-y-2 rounded-md bg-muted p-3 text-sm text-foreground">
                       <div className="flex flex-wrap items-center gap-2">
-                        <label className="text-sm font-medium text-gray-600" htmlFor={`translateLang-${comment._id}`}>
+                        <label className="text-sm font-medium text-muted-foreground" htmlFor={`translateLang-${comment._id}`}>
                           Translate to:
                         </label>
                         <select
@@ -379,7 +383,7 @@ const Comments = ({ videoId }: any) => {
                       </div>
                       {translations[comment._id] && (
                         <div className="rounded-md bg-card p-3 text-sm text-foreground">
-                          <span className="block text-xs uppercase tracking-wide text-gray-500">
+                          <span className="block text-xs uppercase tracking-wide text-muted-foreground">
                             Translated from {translatedFrom[comment._id] || "original"}
                           </span>
                           <p>{translations[comment._id]}</p>
@@ -388,9 +392,9 @@ const Comments = ({ videoId }: any) => {
                     </div>
                   )}
                   {comment.userid === user?._id && (
-                    <div className="flex gap-2 mt-3 text-sm text-gray-500">
-                      <button onClick={() => handleEdit(comment)}>Edit</button>
-                      <button onClick={() => handleDelete(comment._id)}>Delete</button>
+                    <div className="flex gap-2 mt-3 text-sm">
+                      <button className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full px-3 py-1.5 transition-colors" onClick={() => handleEdit(comment)}>Edit</button>
+                      <button className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full px-3 py-1.5 transition-colors" onClick={() => handleDelete(comment._id)}>Delete</button>
                     </div>
                   )}
                 </div>
