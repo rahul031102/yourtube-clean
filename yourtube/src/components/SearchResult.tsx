@@ -31,13 +31,21 @@ const SearchResultVideoCard = ({ video }: any) => {
   return (
     <div className="flex gap-4 group">
       <Link href={`/watch/${video._id}`} className="flex-shrink-0">
-        <div className="relative w-80 aspect-video bg-gray-100 rounded-lg overflow-hidden">
-          <video
-            src={videoSrc(video)}
-            preload="metadata"
-            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-            className="object-cover group-hover:scale-105 transition-transform duration-200"
-          />
+        <div className="relative w-80 aspect-video bg-muted rounded-lg overflow-hidden">
+          {video?.thumbnail ? (
+            <img
+              src={`http://localhost:5000/uploads/${video.thumbnail}`}
+              alt={video?.videotitle || "thumbnail"}
+              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <video
+              src={videoSrc(video)}
+              preload="metadata"
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+              className="object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          )}
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
             {formatDurationLabel(duration)}
           </div>

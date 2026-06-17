@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
 import { getSocket } from "@/lib/socket";
@@ -172,7 +173,7 @@ const VideoCallPage = ({ params }: any) => {
       if (accepted) {
         setupPeerAndMedia();
       } else {
-        alert("Call declined");
+        toast.error("Call declined", { description: "The recipient declined your call." });
         router.push("/");
       }
     };
@@ -393,7 +394,7 @@ const VideoCallPage = ({ params }: any) => {
                   Record
                 </Button>
               ) : (
-                <Button onClick={() => stopRecording()} className="bg-gray-800 text-white">
+                <Button onClick={() => stopRecording()} variant="outline">
                   Stop
                 </Button>
               )}

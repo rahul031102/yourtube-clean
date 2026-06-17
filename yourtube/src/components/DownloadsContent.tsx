@@ -68,7 +68,7 @@ export default function DownloadsContent() {
         {downloads.map((item) => (
           <div key={item._id} className="flex gap-4 group rounded-lg border p-4">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden">
+              <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
                 <video
                   src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath?.replace(/\\/g, "/")}`}
                   className="object-cover w-full h-full"

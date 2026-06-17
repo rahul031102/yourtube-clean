@@ -21,11 +21,19 @@ export default function RelatedVideos({ videos }: RelatedVideosProps) {
           href={`/watch/${video._id}`}
           className="flex gap-2 group"
         >
-          <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden flex-shrink-0">
-            <video
-              src={vid}
-              className="object-cover group-hover:scale-105 transition-transform duration-200"
-            />
+          <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden flex-shrink-0">
+            {video?.thumbnail ? (
+              <img
+                src={`http://localhost:5000/uploads/${video.thumbnail}`}
+                alt={video.videotitle}
+                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+              />
+            ) : (
+              <video
+                src={vid}
+                className="object-cover group-hover:scale-105 transition-transform duration-200"
+              />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600">

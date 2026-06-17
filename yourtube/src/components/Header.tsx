@@ -177,7 +177,7 @@ const Header = () => {
         )}{" "}
       </div>
       {incoming && (
-        <div className="fixed right-4 bottom-4 bg-white shadow rounded p-4 w-80 z-50">
+        <div className="fixed right-4 bottom-4 bg-card shadow rounded p-4 w-80 z-50">
           <div className="font-medium">Incoming call</div>
           <div className="text-sm text-gray-600">From: {incoming.fromUserId}</div>
           <div className="mt-3 flex gap-2">

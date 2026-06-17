@@ -309,7 +309,7 @@ export default function GestureVideoPlayer({
           ref={videoRef}
           className="w-full h-full"
           controls
-          poster={`/placeholder.svg?height=480&width=854`}
+          poster={""}
           controlsList="nodownload"
           onPlay={handlePlay}
           onTimeUpdate={handleTimeUpdate}
