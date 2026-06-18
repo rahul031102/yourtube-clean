@@ -27,7 +27,7 @@ const SearchResultVideoCard = ({ video }: any) => {
     // const path = video.filepath.startsWith("/") ? video.filepath.slice(1) : video.filepath;
    if (!video?.filepath) return "/video/vdo.mp4";
    return video.filepath; 
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${path}`;
+    // return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${path}`;
   }, []);
 
   return (
@@ -183,8 +183,9 @@ const SearchResult = ({ query }: any) => {
 
   const videoSrc = (video: any) => {
     if (!video?.filepath) return "/video/vdo.mp4";
-    const path = video.filepath.startsWith("/") ? video.filepath.slice(1) : video.filepath;
-    return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${path}`;
+     return video.filepath;
+    // const path = video.filepath.startsWith("/") ? video.filepath.slice(1) : video.filepath;
+    // return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${path}`;
   };
 
   return (
