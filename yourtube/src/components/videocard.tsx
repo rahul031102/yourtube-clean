@@ -50,14 +50,16 @@ export default function VideoCard({ video }: any) {
 <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
   {video?.thumbnail ? (
     <img
-    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${video.thumbnail}`}
+    src={video?.filepath}
+    // src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${video.thumbnail}`}
     // src={`http://localhost:5000/uploads/${video.thumbnail}`}
       alt={video?.videotitle || "thumbnail"}
       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
     />
   ) : (
     <video
-      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
+    src={video?.filepath}
+      // src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
       preload="metadata"
       onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
       className="object-cover group-hover:scale-105 transition-transform duration-200"
@@ -65,7 +67,8 @@ export default function VideoCard({ video }: any) {
   )}
   {video?.thumbnail && (
     <video
-      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
+    src={video?.filepath}
+      // src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${video?.filepath}`}
       preload="metadata"
       onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
       className="hidden"

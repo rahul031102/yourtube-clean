@@ -23,8 +23,10 @@ const SearchResultVideoCard = ({ video }: any) => {
   const [duration, setDuration] = useState<number | null>(null);
 
   const videoSrc = useCallback((video: any) => {
-    if (!video?.filepath) return "/video/vdo.mp4";
-    const path = video.filepath.startsWith("/") ? video.filepath.slice(1) : video.filepath;
+    // if (!video?.filepath) return "/video/vdo.mp4";
+    // const path = video.filepath.startsWith("/") ? video.filepath.slice(1) : video.filepath;
+   if (!video?.filepath) return "/video/vdo.mp4";
+   return video.filepath; 
     return `${process.env.NEXT_PUBLIC_BACKEND_URL}/${path}`;
   }, []);
 
@@ -34,7 +36,8 @@ const SearchResultVideoCard = ({ video }: any) => {
         <div className="relative w-80 aspect-video bg-muted rounded-lg overflow-hidden">
           {video?.thumbnail ? (
             <img
-             src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${video.thumbnail}`}
+            src={video.thumbnail}
+            //  src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/uploads/${video.thumbnail}`}
             // src={`http://localhost:5000/uploads/${video.thumbnail}`}
               alt={video?.videotitle || "thumbnail"}
               className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
