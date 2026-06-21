@@ -126,7 +126,8 @@ useEffect(() => {
     }
   };
   return (
-    <header className="flex items-center justify-between px-4 py-2 bg-background text-foreground border-b">
+    <header className="flex items-center justify-between px-4 py-2 bg-background text-foreground border-b sticky top-0 z-30">
+    {/* // <header className="flex items-center justify-between px-4 py-2 bg-background text-foreground border-b"> */}
       <div className="flex items-center gap-4">
         {/* <Button variant="ghost" size="icon">
           <Menu className="w-6 h-6" />
@@ -272,7 +273,8 @@ useEffect(() => {
       </div>
 
       {mobileSearchOpen && (
-  <div className="sm:hidden px-4 pb-2 flex items-center gap-2">
+  // <div className="sm:hidden px-4 pb-2 flex items-center gap-2">
+    <div className="sm:hidden fixed top-[53px] left-0 right-0 z-20 bg-background border-b px-3 py-2 flex items-center gap-2">
     <Input
       type="search"
       placeholder="Search"

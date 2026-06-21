@@ -52,7 +52,8 @@ const index = () => {
               <Comments videoId={id} />
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 px-2 sm:px-0">
+          {/* <div className="space-y-4"> */}
             <RelatedVideos videos={videoList} />
           </div>
         </div>

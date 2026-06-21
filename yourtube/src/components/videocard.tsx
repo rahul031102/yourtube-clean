@@ -26,7 +26,8 @@ export default function VideoCard({ video }: any) {
 
   return (
     <Link href={`/watch/${video?._id}`} className="group">
-      <div className="space-y-3">
+      {/* <div className="space-y-3"> */}
+      <div className="space-y-2 sm:space-y-3">
         {/* <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
           {video?.thumbnail ? (
             <img

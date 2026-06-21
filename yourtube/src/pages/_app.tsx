@@ -46,9 +46,11 @@ export default function App({ Component, pageProps }: AppProps) {
         <Header onMenuClick={() => setMobileMenuOpen(true)} />
         <Toaster />
         <OtpDialog />
-        <div className="flex min-h-screen">
+        <div className="flex min-h-screen relative">
+        {/* <div className="flex min-h-screen"> */}
           <Sidebar open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
-         <div className="flex-1 w-full min-w-0">
+         {/* <div className="flex-1 w-full min-w-0"> */}
+         <div className="flex-1 w-full min-w-0 md:ml-64">
             <Component {...pageProps} />
           </div>
           {/* <Component {...pageProps} /> */}
