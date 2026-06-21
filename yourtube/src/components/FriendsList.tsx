@@ -84,7 +84,7 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
                 <div className="text-sm text-gray-500">{f.online ? "Online" : "Offline"}</div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
@@ -99,7 +99,17 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
               >
                 <VideoIcon className="w-4 h-4" />
               </Button>
-            </div>
+            </div> */}
+            // TO:
+<div className="flex items-center gap-2">
+  <Button
+    variant="default"
+    size="icon"
+    onClick={() => handleCall(String(f._id), mode)}
+  >
+    {mode === "audio" ? <PhoneCall className="w-4 h-4" /> : <VideoIcon className="w-4 h-4" />}
+  </Button>
+</div>
           </div>
         ))}
       </div>
