@@ -334,6 +334,10 @@ const toggleScreenShare = async () => {
   const pc = pcRef.current;
   if (!pc || mode !== "video") return;
   if (!screenTrackRef.current) {
+    if (!(navigator.mediaDevices as any)?.getDisplayMedia) {
+      toast.error("Screen sharing isn't supported on this browser/device.");
+      return;
+    }
     try {
       const displayStream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true });
       const screenTrack = displayStream.getVideoTracks()[0];
@@ -351,8 +355,13 @@ const toggleScreenShare = async () => {
         screenTrackRef.current = screenTrack;
         setIsScreenSharing(true);
       }
-    } catch (e) {
+   } catch (e: any) {
       console.warn("screen share error", e);
+      if (e?.name === "NotAllowedError") {
+        toast.error("Screen share permission was denied.");
+      } else {
+        toast.error("Couldn't start screen sharing on this device.");
+      }
     }
   } else {
     const sender = pc.getSenders().find((s) => s.track?.kind === "video");
