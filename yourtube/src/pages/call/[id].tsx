@@ -50,7 +50,7 @@ const VideoCallPage = ({ params }: any) => {
   const [role, setRole] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(true);
-
+const [isScreenSharing, setIsScreenSharing] = useState(false);
   useEffect(() => {
     const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams("");
     const currentMode = params.get("mode") === "audio" ? "audio" : "video";
@@ -300,34 +300,70 @@ const VideoCallPage = ({ params }: any) => {
     router.push("/");
   };
 
-  const toggleScreenShare = async () => {
-    const pc = pcRef.current;
-    if (!pc || mode !== "video") return;
-    if (!screenTrackRef.current) {
-      try {
-        const displayStream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true });
-        const screenTrack = displayStream.getVideoTracks()[0];
-        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-        if (sender) {
-          await sender.replaceTrack(screenTrack);
-          screenTrack.onended = async () => {
-            const camera = cameraTrackRef.current;
-            if (camera && sender) await sender.replaceTrack(camera);
-            screenTrackRef.current = null;
-          };
-          screenTrackRef.current = screenTrack;
-        }
-      } catch (e) {
-        console.warn("screen share error", e);
-      }
-    } else {
+  // const toggleScreenShare = async () => {
+  //   const pc = pcRef.current;
+  //   if (!pc || mode !== "video") return;
+  //   if (!screenTrackRef.current) {
+  //     try {
+  //       const displayStream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true });
+  //       const screenTrack = displayStream.getVideoTracks()[0];
+  //       const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+  //       if (sender) {
+  //         await sender.replaceTrack(screenTrack);
+  //         screenTrack.onended = async () => {
+  //           const camera = cameraTrackRef.current;
+  //           if (camera && sender) await sender.replaceTrack(camera);
+  //           screenTrackRef.current = null;
+  //         };
+  //         screenTrackRef.current = screenTrack;
+  //       }
+  //     } catch (e) {
+  //       console.warn("screen share error", e);
+  //     }
+  //   } else {
+  //     const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+  //     const camera = cameraTrackRef.current;
+  //     if (sender && camera) await sender.replaceTrack(camera);
+  //     if (screenTrackRef.current) screenTrackRef.current.stop();
+  //     screenTrackRef.current = null;
+  //   }
+  // };
+
+// TO:
+const toggleScreenShare = async () => {
+  const pc = pcRef.current;
+  if (!pc || mode !== "video") return;
+  if (!screenTrackRef.current) {
+    try {
+      const displayStream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true });
+      const screenTrack = displayStream.getVideoTracks()[0];
       const sender = pc.getSenders().find((s) => s.track?.kind === "video");
-      const camera = cameraTrackRef.current;
-      if (sender && camera) await sender.replaceTrack(camera);
-      if (screenTrackRef.current) screenTrackRef.current.stop();
-      screenTrackRef.current = null;
+      if (sender) {
+        await sender.replaceTrack(screenTrack);
+        if (localRef.current) localRef.current.srcObject = displayStream;
+        screenTrack.onended = async () => {
+          const camera = cameraTrackRef.current;
+          if (camera && sender) await sender.replaceTrack(camera);
+          if (localRef.current && localStreamRef.current) localRef.current.srcObject = localStreamRef.current;
+          screenTrackRef.current = null;
+          setIsScreenSharing(false);
+        };
+        screenTrackRef.current = screenTrack;
+        setIsScreenSharing(true);
+      }
+    } catch (e) {
+      console.warn("screen share error", e);
     }
-  };
+  } else {
+    const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+    const camera = cameraTrackRef.current;
+    if (sender && camera) await sender.replaceTrack(camera);
+    if (localRef.current && localStreamRef.current) localRef.current.srcObject = localStreamRef.current;
+    if (screenTrackRef.current) screenTrackRef.current.stop();
+    screenTrackRef.current = null;
+    setIsScreenSharing(false);
+  }
+};
 
   return (
     <main className="flex-1 p-6">
@@ -396,7 +432,8 @@ const VideoCallPage = ({ params }: any) => {
                   >
                     {isCameraOn ? "Camera Off" : "Camera On"}
                   </Button>
-                  <Button onClick={() => toggleScreenShare()}>Share Screen</Button>
+                  <Button onClick={() => toggleScreenShare()}>{isScreenSharing ? "Stop Sharing" : "Share Screen"}</Button>
+                  {/* <Button onClick={() => //</>toggleScreenShare()}>Share Screen</Button> */}
                 </>
               )}
               {!recording ? (
