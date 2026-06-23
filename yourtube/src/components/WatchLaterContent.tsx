@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
-
+import { toast } from "sonner";
 export default function WatchLaterContent() {
   const [watchLater, setWatchLater] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,15 +43,24 @@ export default function WatchLaterContent() {
   if (loading) {
     return <div>Loading watch later...</div>;
   }
-  const handleRemoveFromWatchLater = async (watchLaterId: string) => {
-    try {
-      console.log("Removing from history:", watchLaterId);
-      setWatchLater(watchLater.filter((item) => item._id !== watchLaterId));
-    } catch (error) {
-      console.error("Error removing from history:", error);
-    }
-  };
-
+  // const handleRemoveFromWatchLater = async (watchLaterId: string) => {
+  //   try {
+  //     console.log("Removing from history:", watchLaterId);
+  //     setWatchLater(watchLater.filter((item) => item._id !== watchLaterId));
+  //   } catch (error) {
+  //     console.error("Error removing from history:", error);
+  //   }
+  // };
+const handleRemoveFromWatchLater = async (watchLaterId: string, videoId: string) => {
+  try {
+    await axiosInstance.post(`/watch/${videoId}`, { userId: user._id });
+    setWatchLater(watchLater.filter((item) => item._id !== watchLaterId));
+    toast.success("Removed from Watch Later");
+  } catch (error) {
+    console.error("Error removing from watch later:", error);
+    toast.error("Couldn't remove. Try again.");
+  }
+};
   if (!user) {
     return (
       <div className="text-center py-12">
@@ -128,7 +137,7 @@ export default function WatchLaterContent() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => handleRemoveFromWatchLater(item._id)}
+                  onClick={() => handleRemoveFromWatchLater(item._id, item.videoid._id)}
                 >
                   <X className="w-4 h-4 mr-2" />
                   Remove from Watch later

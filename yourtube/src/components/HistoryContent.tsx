@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import axiosInstance from "@/lib/axiosinstance";
 import { useUser } from "@/lib/AuthContext";
-
+import { toast } from "sonner";
 export default function HistoryContent() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,16 +44,25 @@ export default function HistoryContent() {
     return <div>Loading history...</div>;
   }
 
-  const handleRemoveFromHistory = async (historyId: string) => {
-    try {
-      console.log("Removing from history:", historyId);
+  // const handleRemoveFromHistory = async (historyId: string) => {
+  //   try {
+  //     console.log("Removing from history:", historyId);
 
-      setHistory(history.filter((item) => item._id !== historyId));
-    } catch (error) {
-      console.error("Error removing from history:", error);
-    }
-  };
-
+  //     setHistory(history.filter((item) => item._id !== historyId));
+  //   } catch (error) {
+  //     console.error("Error removing from history:", error);
+  //   }
+  // };
+const handleRemoveFromHistory = async (historyId: string) => {
+  try {
+    await axiosInstance.delete(`/history/${historyId}`);
+    setHistory(history.filter((item) => item._id !== historyId));
+    toast.success("Removed from history");
+  } catch (error) {
+    console.error("Error removing from history:", error);
+    toast.error("Couldn't remove from history. Try again.");
+  }
+};
   if (!user) {
     return (
       <div className="text-center py-12">

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { MoreVertical, X, ThumbsUp, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+// import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
+import { toast } from "sonner";
 
 export default function LikedVideosContent() {
   const [likedVideos, setLikedVideos] = useState<any[]>([]);
@@ -40,17 +42,28 @@ export default function LikedVideosContent() {
     }
   };
 
-  const handleUnlikeVideo = async (videoId: string, likedVideoId: string) => {
-    if (!user) return;
+  // const handleUnlikeVideo = async (videoId: string, likedVideoId: string) => {
+  //   if (!user) return;
 
-    try {
-      console.log("Unliking video:", videoId, "for user:", user.id);
-      setLikedVideos(likedVideos.filter((item) => item._id !== likedVideoId));
-    } catch (error) {
-      console.error("Error unliking video:", error);
-    }
-  };
+  //   try {
+  //     console.log("Unliking video:", videoId, "for user:", user.id);
+  //     setLikedVideos(likedVideos.filter((item) => item._id !== likedVideoId));
+  //   } catch (error) {
+  //     console.error("Error unliking video:", error);
+  //   }
+  // };
+const handleUnlikeVideo = async (videoId: string, likedVideoId: string) => {
+  if (!user) return;
 
+  try {
+    await axiosInstance.post(`/like/${videoId}`, { userId: user._id });
+    setLikedVideos(likedVideos.filter((item) => item._id !== likedVideoId));
+    toast.success("Removed from liked videos");
+  } catch (error) {
+    console.error("Error unliking video:", error);
+    toast.error("Couldn't remove video. Try again.");
+  }
+};
   if (!user) {
     return (
       <div className="text-center py-12">

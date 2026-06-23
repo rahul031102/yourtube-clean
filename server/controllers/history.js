@@ -38,3 +38,13 @@ export const getallhistoryVideo = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+export const removeFromHistory = async (req, res) => {
+  const { historyId } = req.params;
+  try {
+    await history.findByIdAndDelete(historyId);
+    return res.status(200).json({ message: "Removed from history" });
+  } catch (error) {
+    console.error(" error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
