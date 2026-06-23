@@ -101,7 +101,8 @@ const handleUnlikeVideo = async (videoId: string, likedVideoId: string) => {
       </div>
 
       <div className="space-y-4">
-        {likedVideos.map((item) => (
+        {likedVideos.filter((item) => item.videoid).map((item) => (
+        // {/* {likedVideos.map((item) => ( */}
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">

@@ -96,7 +96,7 @@ const handleRemoveFromWatchLater = async (watchLaterId: string, videoId: string)
       </div>
 
       <div className="space-y-4">
-        {watchLater.map((item) => (
+        {watchLater.filter((item) => item.videoid).map((item) => (
           <div key={item._id} className="flex gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
               <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
