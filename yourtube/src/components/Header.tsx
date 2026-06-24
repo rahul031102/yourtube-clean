@@ -84,6 +84,26 @@ const [isdialogeopen, setisdialogeopen] = useState(false);
     }
   
     const onIncoming = ({ fromUserId, roomId, mode, fromName, fromImage }: any) => {
+      const removedList = typeof window !== "undefined" ? localStorage.getItem("removed_friends") : null;
+      let isRemoved = false;
+      if (removedList) {
+        try {
+          const ids = JSON.parse(removedList);
+          if (Array.isArray(ids) && ids.includes(String(fromUserId))) {
+            isRemoved = true;
+          }
+        } catch (e) {}
+      }
+
+      if (isRemoved) {
+        socket.emit("call-response", {
+          fromUserId: fromUserId,
+          targetUserId: user?._id,
+          accepted: false,
+          roomId: roomId,
+        });
+        return;
+      }
       setIncoming({ fromUserId, roomId, mode, fromName, fromImage });
     };
     socket.on("incoming-call", onIncoming);

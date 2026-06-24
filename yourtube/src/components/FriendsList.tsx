@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { PhoneCall, VideoIcon, Trash2 } from "lucide-react";
+import { PhoneCall, VideoIcon, Trash2, Edit2, Check, X } from "lucide-react";
 import { useRouter } from "next/router";
 import axiosInstance from "@/lib/axiosinstance";
 import { getSocket } from "@/lib/socket";
@@ -19,6 +19,8 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
   const [calling, setCalling] = useState<string | null>(null);
   const [usersList, setUsersList] = useState<any[] | null>(null);
   const [removedUsers, setRemovedUsers] = useState<string[]>([]);
+  const [editingFriendId, setEditingFriendId] = useState<string | null>(null);
+  const [editNicknameValue, setEditNicknameValue] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -80,6 +82,29 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
     localStorage.setItem("removed_friends", JSON.stringify(updated));
   };
 
+  const handleSaveNickname = async (friendId: string) => {
+    if (!user?._id) return;
+    try {
+      await axiosInstance.post("/user/nickname", {
+        userId: user._id,
+        friendId,
+        nickname: editNicknameValue.trim(),
+      });
+      setUsersList((prev) =>
+        prev
+          ? prev.map((u) =>
+              u._id === friendId
+                ? { ...u, name: editNicknameValue.trim() || u.channelname || u.name }
+                : u
+            )
+          : null
+      );
+      setEditingFriendId(null);
+    } catch (e) {
+      console.error("Failed to save nickname", e);
+    }
+  };
+
   const visibleUsers = usersList?.filter((f) => !removedUsers.includes(String(f._id))) || [];
 
   return (
@@ -100,20 +125,63 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
         )}
 
         {!loading && visibleUsers.map((f) => {
-          const displayName = f.channelname || f.name || "Unknown";
+          const displayName = f.name || f.channelname || "Unknown";
           const isCalling = calling === f._id;
+          const isEditing = editingFriendId === f._id;
           return (
             <div
               key={f._id}
               className="flex items-center justify-between gap-4 p-3 rounded-lg border"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 <Avatar className="w-12 h-12">
                   <AvatarImage src={f.image || undefined} />
                   <AvatarFallback>{displayName[0]?.toUpperCase() || "U"}</AvatarFallback>
                 </Avatar>
-                <div>
-                  <div className="font-medium">{displayName}</div>
+                <div className="flex-1 min-w-0">
+                  {isEditing ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="text"
+                        value={editNicknameValue}
+                        onChange={(e) => setEditNicknameValue(e.target.value)}
+                        className="border rounded px-2 py-0.5 text-sm w-36 focus:outline-none focus:ring-1 focus:ring-primary"
+                        autoFocus
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => handleSaveNickname(String(f._id))}
+                      >
+                        <Check className="w-4 h-4 text-green-600" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setEditingFriendId(null)}
+                      >
+                        <X className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium truncate">{displayName}</div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 text-gray-400 hover:text-gray-600"
+                        onClick={() => {
+                          setEditingFriendId(String(f._id));
+                          setEditNicknameValue(f.name || "");
+                        }}
+                        title="Edit nickname"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
                   <div className={`text-sm ${f.online ? "text-green-500" : "text-gray-400"}`}>
                     {f.online ? "● Online" : "○ Offline"}
                   </div>

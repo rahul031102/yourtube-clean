@@ -12,6 +12,11 @@ const userschema = mongoose.Schema({
     default: "free",
   },
   joinedon: { type: Date, default: Date.now },
+  nicknames: {
+    type: Map,
+    of: String,
+    default: {},
+  },
 });
 
 export default mongoose.model("user", userschema);
