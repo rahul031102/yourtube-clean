@@ -94,7 +94,7 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
         prev
           ? prev.map((u) =>
               u._id === friendId
-                ? { ...u, name: editNicknameValue.trim() || u.channelname || u.name }
+                ? { ...u, nickname: editNicknameValue.trim() || null }
                 : u
             )
           : null
@@ -125,7 +125,9 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
         )}
 
         {!loading && visibleUsers.map((f) => {
-          const displayName = f.name || f.channelname || "Unknown";
+          const realName = f.name || f.channelname || "Unknown";
+          const displayName = f.nickname || realName;
+          const hasNickname = !!f.nickname;
           const isCalling = calling === f._id;
           const isEditing = editingFriendId === f._id;
           return (
@@ -166,23 +168,31 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <div className="font-medium truncate">{displayName}</div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5 text-gray-400 hover:text-gray-600"
-                        onClick={() => {
-                          setEditingFriendId(String(f._id));
-                          setEditNicknameValue(f.name || "");
-                        }}
-                        title="Edit nickname"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium truncate">
+                          {displayName}
+                          {hasNickname && <span className="text-xs text-gray-400 ml-1">(nickname)</span>}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5 text-gray-400 hover:text-gray-600"
+                          onClick={() => {
+                            setEditingFriendId(String(f._id));
+                            setEditNicknameValue(f.nickname || "");
+                          }}
+                          title="Edit nickname"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                      {hasNickname && (
+                        <div className="text-xs text-gray-400 truncate">Real name: {realName}</div>
+                      )}
                     </div>
                   )}
-                  <div className={`text-sm ${f.online ? "text-green-500" : "text-gray-400"}`}>
+                  <div className={`text-sm ${f.online ? "text-green-500" : "text-gray-400"} mt-0.5`}>
                     {f.online ? "● Online" : "○ Offline"}
                   </div>
                 </div>
@@ -193,7 +203,7 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
                   variant="outline"
                   size="icon"
                   disabled={isCalling}
-                  onClick={() => handleCall(String(f._id), displayName, "audio")}
+                  onClick={() => handleCall(String(f._id), realName, "audio")}
                   title="Audio call"
                 >
                   <PhoneCall className="w-4 h-4" />
@@ -202,7 +212,7 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
                   variant="default"
                   size="icon"
                   disabled={isCalling}
-                  onClick={() => handleCall(String(f._id), displayName, "video")}
+                  onClick={() => handleCall(String(f._id), realName, "video")}
                   title="Video call"
                 >
                   <VideoIcon className="w-4 h-4" />

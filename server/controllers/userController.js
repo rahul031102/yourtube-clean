@@ -26,15 +26,17 @@ export const listUsers = async (req, res) => {
     const list = await users.find(q).select("_id name image channelname").lean();
     const enriched = list.map((u) => {
       const uIdStr = String(u._id);
-      let displayName = u.name || u.channelname || "Unknown";
+      const realName = u.name || u.channelname || "Unknown";
+      let nickname = null;
       if (nicknames instanceof Map) {
-        if (nicknames.has(uIdStr)) displayName = nicknames.get(uIdStr);
+        if (nicknames.has(uIdStr)) nickname = nicknames.get(uIdStr);
       } else if (nicknames[uIdStr]) {
-        displayName = nicknames[uIdStr];
+        nickname = nicknames[uIdStr];
       }
       return {
         _id: u._id,
-        name: displayName,
+        name: realName,
+        nickname: nickname,
         channelname: u.channelname || u.name || "",
         image: u.image || null,
         online: onlineUsers.has(uIdStr),
