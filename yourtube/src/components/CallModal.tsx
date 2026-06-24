@@ -3,7 +3,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 
 export default function CallModal({ open, onOpenChange, friend }: any) {
   const router = useRouter();

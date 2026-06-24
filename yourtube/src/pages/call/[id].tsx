@@ -36,6 +36,8 @@ const VideoCallPage = () => {
   const localStreamRef = useRef<MediaStream | null>(null);
   const cameraTrackRef = useRef<MediaStreamTrack | null>(null);
   const screenTrackRef = useRef<MediaStreamTrack | null>(null);
+  const remoteSocketIdRef = useRef<string | null>(null);
+  const iceCandidatesQueueRef = useRef<any[]>([]);
   const [connected, setConnected] = useState(false);
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -93,6 +95,10 @@ const VideoCallPage = () => {
 
     const setupPeerAndMedia = async () => {
       try {
+        if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          toast.error("WebRTC is not supported on this browser/device or context (HTTPS required).");
+          return;
+        }
         const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
         if (!mounted) return;
 
@@ -129,7 +135,7 @@ const VideoCallPage = () => {
 
         pc.onicecandidate = (event) => {
           if (event.candidate) {
-            socket.emit("ice-candidate", { target: null, candidate: event.candidate });
+            socket.emit("ice-candidate", { target: remoteSocketIdRef.current, candidate: event.candidate });
           }
         };
 
@@ -137,8 +143,22 @@ const VideoCallPage = () => {
           setConnectionState(pc.connectionState || "unknown");
         };
 
+        const processQueuedCandidates = async () => {
+          while (iceCandidatesQueueRef.current.length > 0) {
+            const cand = iceCandidatesQueueRef.current.shift();
+            if (cand) {
+              try {
+                await pc.addIceCandidate(new RTCIceCandidate(cand));
+              } catch (e) {
+                console.warn("Failed to add queued ICE candidate", e);
+              }
+            }
+          }
+        };
+
         socket.on("user-joined", async ({ id: otherId }) => {
           if (!pc) return;
+          remoteSocketIdRef.current = otherId;
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
           socket.emit("offer", { target: otherId, sdp: offer });
@@ -146,7 +166,9 @@ const VideoCallPage = () => {
 
         socket.on("offer", async ({ from, sdp }) => {
           if (!pc) return;
+          remoteSocketIdRef.current = from;
           await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+          await processQueuedCandidates();
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           socket.emit("answer", { target: from, sdp: answer });
@@ -154,11 +176,17 @@ const VideoCallPage = () => {
 
         socket.on("answer", async ({ from, sdp }) => {
           if (!pc) return;
+          remoteSocketIdRef.current = from;
           await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+          await processQueuedCandidates();
         });
 
         socket.on("ice-candidate", async ({ from, candidate }) => {
           if (!pc || !candidate) return;
+          if (!pc.remoteDescription) {
+            iceCandidatesQueueRef.current.push(candidate);
+            return;
+          }
           try {
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
           } catch (e) {
@@ -184,21 +212,25 @@ const VideoCallPage = () => {
       }
     };
 
-   if (role === "caller") {
-  // start local camera immediately so caller sees themselves while waiting
-  navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
-    localStreamRef.current = stream;
-    cameraTrackRef.current = stream.getVideoTracks()[0] || null;
-    if (localRef.current && currentMode === "video") {
-      localRef.current.srcObject = stream;
-      localRef.current.muted = true;
-      localRef.current.play().catch(() => {});
+    if (role === "caller") {
+      if (typeof navigator !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // start local camera immediately so caller sees themselves while waiting
+        navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
+          localStreamRef.current = stream;
+          cameraTrackRef.current = stream.getVideoTracks()[0] || null;
+          if (localRef.current && currentMode === "video") {
+            localRef.current.srcObject = stream;
+            localRef.current.muted = true;
+            localRef.current.play().catch(() => {});
+          }
+        }).catch(() => {});
+      } else {
+        toast.error("Camera/Mic access is not supported on this browser or connection context.");
+      }
+      socket.on("call-response", onResponse);
+    } else {
+      setupPeerAndMedia();
     }
-  }).catch(() => {});
-  socket.on("call-response", onResponse);
-} else {
-  setupPeerAndMedia();
-}
 
     return () => {
       mounted = false;
