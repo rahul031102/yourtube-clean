@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { PhoneCall, VideoIcon } from "lucide-react";
+import { PhoneCall, VideoIcon, Trash2 } from "lucide-react";
 import { useRouter } from "next/router";
 import axiosInstance from "@/lib/axiosinstance";
 import { getSocket } from "@/lib/socket";
@@ -18,7 +18,17 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
   const { user } = useUser();
   const [calling, setCalling] = useState<string | null>(null);
   const [usersList, setUsersList] = useState<any[] | null>(null);
+  const [removedUsers, setRemovedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("removed_friends");
+    if (saved) {
+      try {
+        setRemovedUsers(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
 
   useEffect(() => {
     if (!user?._id) return;
@@ -64,6 +74,14 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
     router.push(`/call/${targetId}?role=caller&room=${roomId}&mode=${selectedMode}&toName=${toName}`);
   };
 
+  const handleRemove = (targetId: string) => {
+    const updated = [...removedUsers, targetId];
+    setRemovedUsers(updated);
+    localStorage.setItem("removed_friends", JSON.stringify(updated));
+  };
+
+  const visibleUsers = usersList?.filter((f) => !removedUsers.includes(String(f._id))) || [];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -77,11 +95,11 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
 
       <div className="space-y-3">
         {loading && <div className="text-sm text-gray-500">Loading users...</div>}
-        {!loading && usersList && usersList.length === 0 && (
+        {!loading && visibleUsers.length === 0 && (
           <div className="text-sm text-gray-500">No other users available</div>
         )}
 
-        {!loading && usersList && usersList.map((f) => {
+        {!loading && visibleUsers.map((f) => {
           const displayName = f.channelname || f.name || "Unknown";
           const isCalling = calling === f._id;
           return (
@@ -120,6 +138,14 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
                   title="Video call"
                 >
                   <VideoIcon className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleRemove(String(f._id))}
+                  title="Remove user"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
