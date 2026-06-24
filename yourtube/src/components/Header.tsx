@@ -1,6 +1,7 @@
 import { Bell, Menu, Mic, Search, User, VideoIcon, PhoneCall, PhoneOff } from "lucide-react";
 // import { Bell, Menu, Mic, Search, User, VideoIcon, PhoneCall ,phoneoff} from "lucide-react";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -70,28 +71,33 @@ const [isdialogeopen, setisdialogeopen] = useState(false);
 }, []);
   useEffect(() => {
     const socket = getSocket();
-    if (user?. _id) {
-      socket.emit("register", { userId: user._id });
-    }
-  
     const onConnect = () => {
       if (user?._id) {
         socket.emit("register", { userId: user._id });
       }
     };
-    socket.on("connect", onConnect);
-    // const onIncoming = ({ fromUserId, roomId, mode }: any) => {
-    //   setIncoming({ fromUserId, roomId, mode });
-    // };
+
+    if (socket.connected && user?._id) {
+      socket.emit("register", { userId: user._id });
+    } else {
+      socket.on("connect", onConnect);
+    }
+  
     const onIncoming = ({ fromUserId, roomId, mode, fromName, fromImage }: any) => {
-  setIncoming({ fromUserId, roomId, mode, fromName, fromImage });
-};
+      setIncoming({ fromUserId, roomId, mode, fromName, fromImage });
+    };
     socket.on("incoming-call", onIncoming);
+
+    const onUnavailable = ({ targetUserId }: any) => {
+      toast.error("User is unavailable or offline");
+      router.push("/calls");
+    };
+    socket.on("call-unavailable", onUnavailable);
+
     const onRegisterFailed = ({ reason }: any) => {
       console.warn("socket register failed", reason);
     };
     const onRegisterSuccess = ({ userId }: any) => {
-      // no-op for now
       console.log("socket registered", userId);
     };
     socket.on("register-failed", onRegisterFailed);
@@ -100,10 +106,11 @@ const [isdialogeopen, setisdialogeopen] = useState(false);
     return () => {
       socket.off("connect", onConnect);
       socket.off("incoming-call", onIncoming);
+      socket.off("call-unavailable", onUnavailable);
       socket.off("register-failed", onRegisterFailed);
       socket.off("register-success", onRegisterSuccess);
     };
-  }, [user]);
+  }, [user, router]);
 
 useEffect(() => {
   const playBeep = () => {

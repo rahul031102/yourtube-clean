@@ -63,42 +63,31 @@ export default function registerSignaling(io) {
     });
 
     // register a userId with this socket for direct messaging
-    socket.on("register", async ({ userId }) => {
-      // verify user exists in DB before registering
-      try {
-        const Users = await importUsers();
-        if (Users) {
-          const exists = await Users.findById(userId).lean();
-          if (!exists) {
-            socket.emit("register-failed", { reason: "USER_NOT_FOUND" });
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn("register check failed", e);
-        socket.emit("register-failed", { reason: "ERROR" });
+    socket.on("register", ({ userId }) => {
+      if (!userId) {
+        socket.emit("register-failed", { reason: "NO_USER_ID" });
         return;
       }
-      socket.data.userId = userId;
+      socket.data.userId = String(userId);
       markOnline(userId);
       console.log(`[signaling] register ${userId} -> ${socket.id}`);
       socket.emit("register-success", { userId });
     });
 
     // call request flow: caller -> server -> target (incoming-call)
-   socket.on("call-request", ({ targetUserId, roomId, fromUserId, mode, fromName, fromImage }) => {
-  // ensure caller is registered and matches the declared fromUserId
-  
-  if (!socket.data?.userId ) {
-  // if (!socket.data?.userId || socket.data.userId !== fromUserId) {
-    socket.emit("call-error", { reason: "INVALID_CALLER" });
-    return;
-  }
-  // find socket for target
-  const targetSocket = Array.from(io.sockets.sockets.values()).find(s => s.data?.userId === targetUserId);
-  if (targetSocket) {
-    targetSocket.emit("incoming-call", { fromUserId, roomId, mode, fromName, fromImage });
-  } else {
+    socket.on("call-request", ({ targetUserId, roomId, fromUserId, mode, fromName, fromImage }) => {
+      // ensure caller is registered and matches the declared fromUserId
+
+      if (!socket.data?.userId) {
+        // if (!socket.data?.userId || socket.data.userId !== fromUserId) {
+        socket.emit("call-error", { reason: "INVALID_CALLER" });
+        return;
+      }
+      // find socket for target
+      const targetSocket = Array.from(io.sockets.sockets.values()).find(s => String(s.data?.userId) === String(targetUserId));
+      if (targetSocket) {
+        targetSocket.emit("incoming-call", { fromUserId, roomId, mode, fromName, fromImage });
+      } else {
         // notify caller that target unavailable
         socket.emit("call-unavailable", { targetUserId });
       }
@@ -111,7 +100,7 @@ export default function registerSignaling(io) {
         socket.emit("call-error", { reason: "NOT_REGISTERED" });
         return;
       }
-      const callerSocket = Array.from(io.sockets.sockets.values()).find(s => s.data?.userId === fromUserId);
+      const callerSocket = Array.from(io.sockets.sockets.values()).find(s => String(s.data?.userId) === String(fromUserId));
       if (callerSocket) {
         callerSocket.emit("call-response", { accepted, roomId, targetUserId });
       }
