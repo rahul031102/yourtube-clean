@@ -19,6 +19,8 @@ export const login = async (req, res) => {
       } else if (existingUser.plan === "premium") {
         existingUser.plan = "gold";
       }
+      if (name && existingUser.name !== name) existingUser.name = name;
+      if (image && existingUser.image !== image) existingUser.image = image;
       await existingUser.save();
       const token = jwt.sign({ id: existingUser._id, email: existingUser.email }, process.env.JWT_SECRET || "secret", { expiresIn: "7d" });
       return res.status(200).json({ result: existingUser, token });

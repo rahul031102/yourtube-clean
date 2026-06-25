@@ -245,6 +245,14 @@ const VideoCallPage = () => {
   }, [roomId, role, mode, router]);
 
   useEffect(() => {
+    if (mode === "video" && localRef.current && localStreamRef.current) {
+      localRef.current.srcObject = localStreamRef.current;
+      localRef.current.muted = true;
+      localRef.current.play().catch(() => {});
+    }
+  }, [connected, mode]);
+
+  useEffect(() => {
     const socket = getSocket();
     const onCallEnded = () => {
       if (pcRef.current) {

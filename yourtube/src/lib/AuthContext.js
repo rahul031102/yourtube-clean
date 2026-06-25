@@ -1,4 +1,4 @@
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup, signOut, getAdditionalUserInfo, updateProfile } from "firebase/auth";
 // import { signInWithRedirect, getRedirectResult, signOut } from "firebase/auth";
 import { useState } from "react";
 import { createContext } from "react";
@@ -85,10 +85,20 @@ export const UserProvider = ({ children }) => {
       const result = await signInWithPopup(auth, provider);
       // await signInWithRedirect(auth, provider);
       const firebaseuser = result.user;
+      const additionalInfo = getAdditionalUserInfo(result);
+      const freshName = additionalInfo?.profile?.name || firebaseuser.displayName;
+      const freshImage = additionalInfo?.profile?.picture || firebaseuser.photoURL;
+      if (freshName && freshName !== firebaseuser.displayName) {
+        try {
+          await updateProfile(firebaseuser, { displayName: freshName });
+        } catch (e) {
+          // non-fatal
+        }
+      }
       const payload = {
         email: firebaseuser.email,
-        name: firebaseuser.displayName,
-        image: firebaseuser.photoURL || "https://github.com/shadcn.png",
+        name: freshName,
+        image: freshImage || "https://github.com/shadcn.png",
       };
       const response = await axiosInstance.post("/user/login", payload);
       const account = response.data.result;
