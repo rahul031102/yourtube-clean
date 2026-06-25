@@ -3,7 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { PhoneCall, VideoIcon, Trash2, Edit2, Check, X } from "lucide-react";
+import { PhoneCall, VideoIcon, Trash2, Edit2, Check, X, Phone, Video } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { useRouter } from "next/router";
 import axiosInstance from "@/lib/axiosinstance";
 import { getSocket } from "@/lib/socket";
@@ -199,24 +205,54 @@ export default function FriendsList({ mode = "video" }: FriendsListProps) {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  disabled={isCalling}
-                  onClick={() => handleCall(String(f._id), realName, "audio")}
-                  title="Audio call"
-                >
-                  <PhoneCall className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="default"
-                  size="icon"
-                  disabled={isCalling}
-                  onClick={() => handleCall(String(f._id), realName, "video")}
-                  title="Video call"
-                >
-                  <VideoIcon className="w-4 h-4" />
-                </Button>
+                {/* Desktop layout: shown on md and above */}
+                <div className="hidden md:flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={isCalling}
+                    onClick={() => handleCall(String(f._id), realName, "audio")}
+                    title="Audio call"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="icon"
+                    disabled={isCalling}
+                    onClick={() => handleCall(String(f._id), realName, "video")}
+                    title="Video call"
+                  >
+                    <VideoIcon className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Mobile layout: shown below md breakpoint */}
+                <div className="md:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={isCalling}
+                        title="Call options"
+                      >
+                        <PhoneCall className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleCall(String(f._id), realName, "audio")}>
+                        <Phone className="mr-2 h-4 w-4" />
+                        Audio Call
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleCall(String(f._id), realName, "video")}>
+                        <Video className="mr-2 h-4 w-4" />
+                        Video Call
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
                 <Button
                   variant="destructive"
                   size="icon"
