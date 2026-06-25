@@ -159,10 +159,19 @@ useEffect(() => {
     playBeep();
     ringIntervalRef.current = window.setInterval(playBeep, 1000);
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification("Incoming call", {
-        body: `${incoming.fromName || "Someone"} is calling you`,
-        icon: "/favicon.ico",
-      });
+      try {
+        new Notification("Incoming call", {
+          body: `${incoming.fromName || "Someone"} is calling you`,
+          icon: "/favicon.ico",
+        });
+      } catch (err) {
+        // Some mobile browsers (and DevTools mobile emulation) disallow the
+        // plain Notification constructor and require a Service Worker's
+        // showNotification() instead. We don't have a service worker
+        // registered, so just silently skip the notification on those
+        // platforms — the in-app ringing UI and beep still work fine.
+        console.warn("Notification not supported on this platform:", err);
+      }
     }
   } else if (ringIntervalRef.current) {
   clearInterval(ringIntervalRef.current);
