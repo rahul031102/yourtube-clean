@@ -52,7 +52,12 @@ const EditDescriptionInline = ({ video, userId }: any) => {
   };
 
   if (!editing) return (
-    <Button variant="ghost" size="sm" className="p-0 h-auto text-xs mt-1" onClick={() => setEditing(true)}>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-auto px-0 py-0 text-sm font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground"
+      onClick={() => setEditing(true)}
+    >
       Edit description
     </Button>
   );
@@ -424,25 +429,34 @@ const VideoInfo = ({ video }: any) => {
           <UpgradePremium onUpgradeSuccess={() => setShowUpgradeCTA(false)} />
         </div>
       )}
-      <div className="bg-muted rounded-lg p-4">
-        <div className="flex gap-4 text-sm font-medium mb-2">
+      <div className="bg-muted rounded-xl p-4 space-y-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
           <span>{video.views.toLocaleString()} views</span>
-          <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground font-normal">
+            {formatDistanceToNow(new Date(video.createdAt))} ago
+          </span>
         </div>
-        <div className={`text-sm ${showFullDescription ? "" : "line-clamp-3"}`}>
-          <p>{video.description || "No description provided."}</p>
-        </div>
-        {String(user?._id) === String(video.uploader) && (
-          <EditDescriptionInline video={video} userId={user?._id} />
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-2 p-0 h-auto font-medium"
-          onClick={() => setShowFullDescription(!showFullDescription)}
+        <p
+          className={`text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap ${
+            showFullDescription ? "" : "line-clamp-3"
+          }`}
         >
-          {showFullDescription ? "Show less" : "Show more"}
-        </Button>
+          {video.description || "No description provided."}
+        </p>
+        <div className="flex items-center gap-4 pt-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-auto px-0 py-0 text-sm font-semibold hover:bg-transparent hover:text-foreground/70"
+            onClick={() => setShowFullDescription(!showFullDescription)}
+          >
+            {showFullDescription ? "Show less" : "Show more"}
+          </Button>
+          {String(user?._id) === String(video.uploader) && (
+            <EditDescriptionInline video={video} userId={user?._id} />
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
