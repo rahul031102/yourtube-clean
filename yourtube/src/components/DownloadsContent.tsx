@@ -159,9 +159,10 @@ export default function DownloadsContent() {
   // attribute on an <a> tag to be ignored, opening the video in Chrome's
   // player instead of saving it. Fetching the file as a blob first and
   // triggering the download from a same-origin object URL avoids that.
-  const handleDownloadAgain = async (url: string, filename: string, id: string) => {
+  const handleDownloadAgain = async (videoId: string, filename: string, id: string) => {
     setDownloadingId(id);
     try {
+      const url = `${process.env.NEXT_PUBLIC_BACKEND_URL}/download/stream/${videoId}`;
       const res = await fetch(url);
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
@@ -215,10 +216,19 @@ export default function DownloadsContent() {
             <div key={item._id} className="flex gap-4 group rounded-lg border p-4">
               <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
                 <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
-                  <video
-                    src={mediaUrl}
-                    className="object-cover w-full h-full"
-                  />
+                  {item.videoid?.thumbnail ? (
+                    <img
+                      src={`http://localhost:5000/uploads/${item.videoid.thumbnail}`}
+                      alt={item.videoid?.videotitle || "thumbnail"}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <video
+                      src={mediaUrl}
+                      preload="metadata"
+                      className="object-cover w-full h-full"
+                    />
+                  )}
                 </div>
               </Link>
               <div className="flex-1 min-w-0">
@@ -237,7 +247,7 @@ export default function DownloadsContent() {
               </div>
               <div className="flex flex-col justify-between gap-2">
                 <button
-                  onClick={() => handleDownloadAgain(mediaUrl, item.videoid?.filename, item._id)}
+                  onClick={() => handleDownloadAgain(item.videoid._id, item.videoid?.filename, item._id)}
                   disabled={downloadingId === item._id}
                   className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
