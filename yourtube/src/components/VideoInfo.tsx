@@ -29,6 +29,50 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
+const EditDescriptionInline = ({ video, userId }: any) => {
+  const [editing, setEditing] = useState(false);
+  const [desc, setDesc] = useState(video.description || "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await axiosInstance.patch(`/video/update/${video._id}`, {
+        userId,
+        description: desc,
+      });
+      video.description = desc;
+      setEditing(false);
+      toast.success("Description updated");
+    } catch {
+      toast.error("Failed to update");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) return (
+    <Button variant="ghost" size="sm" className="p-0 h-auto text-xs mt-1" onClick={() => setEditing(true)}>
+      Edit description
+    </Button>
+  );
+
+  return (
+    <div className="mt-2 space-y-2">
+      <textarea
+        className="w-full border rounded p-2 text-sm bg-background"
+        rows={3}
+        value={desc}
+        onChange={(e) => setDesc(e.target.value)}
+      />
+      <div className="flex gap-2">
+        <Button size="sm" onClick={save} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+        <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+      </div>
+    </div>
+  );
+};
+
 const VideoInfo = ({ video }: any) => {
   const [likes, setlikes] = useState(video.Like || 0);
   const [dislikes, setDislikes] = useState(video.Dislike || 0);
@@ -386,11 +430,11 @@ const VideoInfo = ({ video }: any) => {
           <span>{formatDistanceToNow(new Date(video.createdAt))} ago</span>
         </div>
         <div className={`text-sm ${showFullDescription ? "" : "line-clamp-3"}`}>
-          <p>
-            Sample video description. This would contain the actual video
-            description from the database.
-          </p>
+          <p>{video.description || "No description provided."}</p>
         </div>
+        {String(user?._id) === String(video.uploader) && (
+          <EditDescriptionInline video={video} userId={user?._id} />
+        )}
         <Button
           variant="ghost"
           size="sm"

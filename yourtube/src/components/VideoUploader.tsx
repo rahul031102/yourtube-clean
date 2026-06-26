@@ -12,6 +12,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
+  const [videoDescription, setVideoDescription] = useState("");
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -36,6 +37,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const resetForm = () => {
     setVideoFile(null);
     setVideoTitle("");
+    setVideoDescription("");
     setIsUploading(false);
     setUploadProgress(0);
     setUploadComplete(false);
@@ -56,6 +58,7 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     const formdata = new FormData();
     formdata.append("file", videoFile);
     formdata.append("videotitle", videoTitle);
+    formdata.append("description", videoDescription);
     formdata.append("videochanel", channelName);
     formdata.append("uploader", channelId);
     console.log(formdata)
@@ -144,6 +147,18 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                   placeholder="Add a title that describes your video"
                   disabled={isUploading || uploadComplete}
                   className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description (optional)</Label>
+                <textarea
+                  id="description"
+                  className="w-full border rounded-md p-2 text-sm mt-1 bg-background"
+                  rows={3}
+                  placeholder="Describe your video..."
+                  value={videoDescription}
+                  disabled={isUploading || uploadComplete}
+                  onChange={(e) => setVideoDescription(e.target.value)}
                 />
               </div>
             </div>

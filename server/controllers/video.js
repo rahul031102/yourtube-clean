@@ -96,6 +96,7 @@ export const uploadvideo = async (req, res) => {
 
     const file = new video({
       videotitle: req.body.videotitle,
+      description: req.body.description || "",
       filename: req.file.originalname,
       filepath: result.secure_url,         // cloudinary URL, not local path
       filetype: req.file.mimetype,
@@ -205,5 +206,22 @@ if (videoDoc.cloudinary_id) {
   } catch (error) {
     console.error("[DELETE] Error deleting video:", error.message);
     return res.status(500).json({ message: "Failed to delete video" });
+  }
+};
+
+export const updatevideo = async (req, res) => {
+  const { videoId } = req.params;
+  const { userId, description, videotitle } = req.body;
+  try {
+    const videoDoc = await video.findById(videoId);
+    if (!videoDoc) return res.status(404).json({ message: "Video not found" });
+    if (String(videoDoc.uploader) !== String(userId))
+      return res.status(403).json({ message: "Not authorized" });
+    if (description !== undefined) videoDoc.description = description;
+    if (videotitle !== undefined) videoDoc.videotitle = videotitle;
+    await videoDoc.save();
+    return res.status(200).json({ message: "Video updated", video: videoDoc });
+  } catch (error) {
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };
