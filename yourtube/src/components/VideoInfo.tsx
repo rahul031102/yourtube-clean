@@ -41,6 +41,7 @@ const VideoInfo = ({ video }: any) => {
   const [showUpgradeCTA, setShowUpgradeCTA] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [alreadyDownloaded, setAlreadyDownloaded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // const user: any = {
@@ -69,6 +70,19 @@ const VideoInfo = ({ video }: any) => {
         setIsLiked(alreadyLiked);
       })
       .catch(() => {});
+  }, [user, video?._id]);
+
+  useEffect(() => {
+    const checkDownload = async () => {
+      if (!user || !video?._id) return;
+      try {
+        const res = await axiosInstance.get(`/download/check/${video._id}/${user._id}`);
+        setAlreadyDownloaded(res.data.downloaded);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    checkDownload();
   }, [user, video?._id]);
 
   useEffect(() => {
@@ -155,6 +169,21 @@ const VideoInfo = ({ video }: any) => {
       return;
     }
 
+    // Already downloaded — just re-download the file directly without
+    // creating another history entry or hitting the daily free-tier limit.
+    if (alreadyDownloaded) {
+      const url = /^https?:\/\//i.test(video.filepath)
+        ? video.filepath
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/${video.filepath}`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = video.filename || `${video.videotitle}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
+    }
+
     setDownloadLoading(true);
     setDownloadMessage("");
     setShowUpgradeCTA(false);
@@ -183,6 +212,7 @@ if (downloadPath) {
       }
 
       setDownloadMessage(res.data.message || "Download started.");
+      setAlreadyDownloaded(true);
     } catch (error: any) {
       const message =
         error?.response?.data?.message || "Unable to download video.";
@@ -315,7 +345,7 @@ if (downloadPath) {
             disabled={downloadLoading}
           >
             <Download className="w-5 h-5 mr-2" />
-            {downloadLoading ? "Downloading..." : "Download"}
+            {downloadLoading ? "Downloading..." : alreadyDownloaded ? "Downloaded" : "Download"}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

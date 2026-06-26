@@ -140,3 +140,19 @@ export const deleteDownloadEntry = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong." });
   }
 };
+
+export const checkDownloadStatus = async (req, res) => {
+  const { videoId, userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(videoId) || !mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid request data." });
+  }
+
+  try {
+    const existing = await download.findOne({ viewer: userId, videoid: videoId });
+    return res.status(200).json({ downloaded: Boolean(existing) });
+  } catch (error) {
+    console.error("Check download status error:", error);
+    return res.status(500).json({ message: "Something went wrong." });
+  }
+};
