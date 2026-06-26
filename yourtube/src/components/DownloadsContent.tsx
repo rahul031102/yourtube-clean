@@ -229,9 +229,9 @@ export default function DownloadsContent() {
         {downloads.filter((item) => item.videoid).map((item) => {
           const mediaUrl = resolveMediaUrl(item.videoid?.filepath);
           return (
-            <div key={item._id} className="flex gap-4 group rounded-lg border p-4">
+            <div key={item._id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 group rounded-lg border p-4">
               <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-                <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
+                <div className="relative w-full sm:w-40 aspect-video bg-muted rounded overflow-hidden">
                   {item.videoid?.thumbnail ? (
                     <img
                       src={item.videoid.thumbnail}
@@ -261,11 +261,11 @@ export default function DownloadsContent() {
                   Downloaded {formatDistanceToNow(new Date(item.createdAt))} ago
                 </p>
               </div>
-              <div className="flex flex-col justify-between gap-2">
+              <div className="flex flex-row sm:flex-col justify-start sm:justify-between gap-2 flex-shrink-0">
                 <button
                   onClick={() => handleDownloadAgain(item.videoid._id, item.videoid?.filename, item._id)}
                   disabled={downloadingId === item._id}
-                  className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
                 >
                   {downloadingId === item._id ? "Downloading..." : "Download again"}
                 </button>

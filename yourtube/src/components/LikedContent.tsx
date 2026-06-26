@@ -266,9 +266,9 @@ const handleUnlikeVideo = async (videoId: string, likedVideoId: string) => {
 
       <div className="space-y-4">
         {likedVideos.filter((item) => item.videoid).map((item) => (
-          <div key={item._id} className="flex gap-4 group">
+          <div key={item._id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
+              <div className="relative w-full sm:w-40 aspect-video bg-muted rounded overflow-hidden">
                 <video
                   src={item.videoid?.filepath}
                   // src={`${process.env.NEXT_PUBLIC_BACKEND_URL}/${item.videoid?.filepath}`}
@@ -300,7 +300,7 @@ const handleUnlikeVideo = async (videoId: string, likedVideoId: string) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100"
+                  className="self-start opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>

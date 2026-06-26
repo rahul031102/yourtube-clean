@@ -85,9 +85,9 @@ export default function WatchLaterContent() {
 
       <div className="space-y-4">
         {watchLater.filter((item) => item.videoid).map((item) => (
-          <div key={item._id} className="flex gap-4 group">
+          <div key={item._id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
+              <div className="relative w-full sm:w-40 aspect-video bg-muted rounded overflow-hidden">
                 <video
                   src={item.videoid?.filepath}
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
@@ -116,7 +116,7 @@ export default function WatchLaterContent() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100"
+                  className="self-start opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
