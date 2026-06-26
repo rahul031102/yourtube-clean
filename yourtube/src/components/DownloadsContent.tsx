@@ -218,7 +218,7 @@ export default function DownloadsContent() {
                 <div className="relative w-40 aspect-video bg-muted rounded overflow-hidden">
                   {item.videoid?.thumbnail ? (
                     <img
-                      src={`http://localhost:5000/uploads/${item.videoid.thumbnail}`}
+                      src={item.videoid.thumbnail}
                       alt={item.videoid?.videotitle || "thumbnail"}
                       className="object-cover w-full h-full"
                     />
