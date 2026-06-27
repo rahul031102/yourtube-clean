@@ -11,6 +11,11 @@ const historyschema = mongoose.Schema(
       ref: "videofiles",
       required: true,
     },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      immutable: false,
+    },
     likedon: { type: Date, default: Date.now },
   },
   {

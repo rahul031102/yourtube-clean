@@ -135,6 +135,19 @@ const VideoInfo = ({ video }: any) => {
   }, [user, video?._id]);
 
   useEffect(() => {
+    if (!user?._id || !video?._id) return;
+    axiosInstance
+      .get(`/watch/${user._id}`)
+      .then((res) => {
+        const already = res.data.some(
+          (item: any) => item.videoid?._id === video._id || item.videoid === video._id
+        );
+        setIsWatchLater(already);
+      })
+      .catch(() => {});
+  }, [user?._id, video?._id]);
+
+  useEffect(() => {
     const handleviews = async () => {
       if (user) {
         try {
@@ -174,15 +187,14 @@ const VideoInfo = ({ video }: any) => {
     }
   };
   const handleWatchLater = async () => {
+    if (!user) return;
     try {
       const res = await axiosInstance.post(`/watch/${video._id}`, {
         userId: user?._id,
       });
-      if (res.data.watchlater) {
-        setIsWatchLater(!isWatchLater);
-      } else {
-        setIsWatchLater(false);
-      }
+      const added = res.data.watchlater === true;
+      setIsWatchLater(added);
+      toast.success(added ? "Added to Watch Later" : "Removed from Watch Later");
     } catch (error) {
       console.log(error);
     }
@@ -371,13 +383,13 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-muted rounded-full shrink-0 ${
-              isWatchLater ? "text-primary" : ""
+            className={`bg-muted rounded-full shrink-0 transition-colors ${
+              isWatchLater ? "text-blue-500 bg-blue-500/10" : ""
             }`}
             onClick={handleWatchLater}
           >
-            <Clock className="w-5 h-5 mr-2" />
-            {isWatchLater ? "Saved" : "Watch Later"}
+            <Clock className={`w-5 h-5 mr-2 ${isWatchLater ? "fill-blue-500" : ""}`} />
+            {isWatchLater ? "✓ Saved" : "Watch Later"}
           </Button>
           <Button
             variant="ghost"

@@ -5,7 +5,11 @@ export const handlehistory = async (req, res) => {
   const { userId } = req.body;
   const { videoId } = req.params;
   try {
-    await history.create({ viewer: userId, videoid: videoId });
+    await history.findOneAndUpdate(
+      { viewer: userId, videoid: videoId },
+      { $set: { createdAt: new Date() } },
+      { upsert: true, new: true }
+    );
     await video.findByIdAndUpdate(videoId, { $inc: { views: 1 } });
     return res.status(200).json({ history: true });
   } catch (error) {
