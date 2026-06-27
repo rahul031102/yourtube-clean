@@ -30,8 +30,8 @@ export const getISTHour = (date: Date = new Date()) => {
 
 const isWithinLightWindow = (date: Date = new Date()) => {
   const hour = getISTHour(date);
-  // return hour >= 10 && hour < 12;
-  return hour >= 21 || hour === 0;
+  return hour >= 10 && hour < 12;
+  // return hour >= 21 || hour === 0;
 };
 
 export type GeoLocation = {
