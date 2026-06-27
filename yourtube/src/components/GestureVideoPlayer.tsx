@@ -119,19 +119,6 @@ export default function GestureVideoPlayer({
   const [activeZone, setActiveZone] = useState<GestureZone | null>(null);
   const armTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleWrapperPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const third = rect.width / 3;
-      const zone: GestureZone = x < third ? "left" : x < third * 2 ? "center" : "right";
-
-      setActiveZone(zone);
-      if (armTimerRef.current) clearTimeout(armTimerRef.current);
-      armTimerRef.current = setTimeout(() => setActiveZone(null), 450);
-    },
-    []
-  );
 
   const isControlRegion = useCallback((clientY: number): boolean => {
     const rect = videoRef.current?.getBoundingClientRect();
@@ -316,17 +303,23 @@ export default function GestureVideoPlayer({
     ]
   );
 
-  const handleZonePointerDown = useCallback(
-    (zone: GestureZone) => (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!getGestureZone(zone, e)) return;
+  const handleWrapperPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const third = rect.width / 3;
+      const zone: GestureZone = x < third ? "left" : x < third * 2 ? "center" : "right";
+
+      if (isControlRegion(e.clientY)) return;
+
+      setActiveZone(zone);
+      if (armTimerRef.current) clearTimeout(armTimerRef.current);
+      armTimerRef.current = setTimeout(() => setActiveZone(null), 450);
 
       const now = Date.now();
       const lastTapTime = tapTimeRef.current[zone];
       const isRepeatTap = now - lastTapTime <= 400;
 
-      // Only swallow the event once this is the 2nd (or later) tap in the
-      // sequence. A lone single tap is left alone so it reaches the native
-      // <video> element underneath.
       if (isRepeatTap) {
         e.preventDefault();
         e.stopPropagation();
@@ -349,7 +342,7 @@ export default function GestureVideoPlayer({
         handleTapComplete(zone, tapCountRef.current[zone]);
       }, 400);
     },
-    [getGestureZone, handleTapComplete]
+    [isControlRegion, handleTapComplete]
   );
 
   const handleZoneDoubleClickCapture = useCallback(
@@ -430,26 +423,23 @@ export default function GestureVideoPlayer({
             through to the native <video> element below, letting mobile
             browsers show their built-in controls. */}
         <div
-          className="absolute inset-x-0 top-0 h-[82%] z-10 flex"
+          className="absolute inset-x-0 top-0 h-[70%] z-10 flex"
           onPointerDownCapture={handleWrapperPointerDown}
         >
           <div
             className={`relative w-1/3 ${activeZone === "left" ? "pointer-events-auto" : "pointer-events-none"}`}
-            onPointerDownCapture={handleZonePointerDown("left")}
             onDoubleClickCapture={handleZoneDoubleClickCapture("left")}
           >
             <div className="absolute inset-0 opacity-0 hover:opacity-10 bg-blue-500 transition-opacity pointer-events-none" />
           </div>
           <div
             className={`relative w-1/3 ${activeZone === "center" ? "pointer-events-auto" : "pointer-events-none"}`}
-            onPointerDownCapture={handleZonePointerDown("center")}
             onDoubleClickCapture={handleZoneDoubleClickCapture("center")}
           >
             <div className="absolute inset-0 opacity-0 hover:opacity-10 bg-green-500 transition-opacity pointer-events-none" />
           </div>
           <div
             className={`relative w-1/3 ${activeZone === "right" ? "pointer-events-auto" : "pointer-events-none"}`}
-            onPointerDownCapture={handleZonePointerDown("right")}
             onDoubleClickCapture={handleZoneDoubleClickCapture("right")}
           >
             <div className="absolute inset-0 opacity-0 hover:opacity-10 bg-red-500 transition-opacity pointer-events-none" />
