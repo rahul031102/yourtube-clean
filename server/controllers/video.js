@@ -22,6 +22,25 @@ const uploadToCloudinary = (buffer) => {
   });
 };
 
+const buildQualityOptions = (publicId) => {
+  const getUrlForQuality = (width, height) => {
+    return cloudinary.url(publicId, {
+      resource_type: "video",
+      transformation: [
+        { width, height, crop: "scale" }
+      ],
+      secure: true
+    });
+  };
+  
+  return {
+    "1080p": getUrlForQuality(1920, 1080),
+    "720p": getUrlForQuality(1280, 720),
+    "480p": getUrlForQuality(854, 480),
+    "360p": getUrlForQuality(640, 360),
+  };
+};
+
 // ffmpeg.setFfmpegPath("C:\\Users\\RAHUL\\AppData\\Local\\Microsoft\\WinGet\\Links\\ffmpeg.exe");
 
 // export const uploadvideo = async (req, res) => {
@@ -105,7 +124,7 @@ export const uploadvideo = async (req, res) => {
       uploader: req.body.uploader,
       cloudinary_id: result.public_id,     // needed for delete
       thumbnail: result.secure_url.replace("/upload/", "/upload/so_1/").replace(/\.[^/.]+$/, ".jpg"),
-      // thumbnail: result.secure_url.replace("/upload/", "/upload/so_1/"),
+      sourceHeight: result.height || null, // real resolution, used to filter out fake upscaled options
     });
 
     await file.save();
@@ -223,5 +242,34 @@ export const updatevideo = async (req, res) => {
     return res.status(200).json({ message: "Video updated", video: videoDoc });
   } catch (error) {
     return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const getVideoQualities = async (req, res) => {
+  const { videoId } = req.params;
+  try {
+    const videoDoc = await video.findById(videoId);
+    if (!videoDoc || !videoDoc.cloudinary_id) {
+      return res.status(404).json({ message: "Video not found." });
+    }
+
+    const allOptions = buildQualityOptions(videoDoc.cloudinary_id);
+    const sourceHeight = videoDoc.sourceHeight || 1080;
+
+    // Only offer resolutions that don't exceed the real source resolution —
+    // anything higher would just be the same file upscaled, not genuinely
+    // higher quality.
+    const heightMap = { "1080p": 1080, "720p": 720, "480p": 480, "360p": 360 };
+    const available = Object.fromEntries(
+      Object.entries(allOptions).filter(([label]) => heightMap[label] <= sourceHeight + 20)
+    );
+
+    return res.status(200).json({
+      qualities: available,
+      original: videoDoc.filepath,
+    });
+  } catch (error) {
+    console.error("Get video qualities error:", error);
+    return res.status(500).json({ message: "Something went wrong." });
   }
 };

@@ -14,6 +14,7 @@ const videochema = mongoose.Schema(
     uploader: { type: String },
     description: { type: String, default: "" },
     cloudinary_id: { type: String },
+    sourceHeight: { type: Number },
   },
   {
     timestamps: true,

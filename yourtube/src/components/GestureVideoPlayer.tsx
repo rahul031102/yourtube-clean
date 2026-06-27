@@ -33,6 +33,11 @@ export default function GestureVideoPlayer({
   const { user } = useUser();
   const [limitReached, setLimitReached] = useState(false);
 
+  // Quality selector states
+  const [qualities, setQualities] = useState<Record<string, string>>({});
+  const [currentQuality, setCurrentQuality] = useState<string>("auto");
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
+
   // Force reload video when video ID changes
   useEffect(() => {
     if (videoRef.current) {
@@ -40,6 +45,35 @@ export default function GestureVideoPlayer({
       setLimitReached(false); // Reset watch limit when video changes
     }
   }, [video?._id]);
+
+  // Fetch available qualities for the current video
+  useEffect(() => {
+    const fetchQualities = async () => {
+      if (!video?._id) return;
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/video/qualities/${video._id}`);
+        const data = await res.json();
+        setQualities(data.qualities || {});
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    fetchQualities();
+    setCurrentQuality("auto"); // reset quality selection when video changes
+  }, [video?._id]);
+
+  const handleQualityChange = (label: string, url: string) => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    const currentTime = vid.currentTime;
+    const wasPlaying = !vid.paused;
+    vid.src = url;
+    vid.load();
+    vid.currentTime = currentTime;
+    if (wasPlaying) vid.play().catch(() => {});
+    setCurrentQuality(label);
+    setShowQualityMenu(false);
+  };
 
   const getWatchLimitSeconds = (plan?: string) => {
     const normalizedPlan = plan === "premium" ? "gold" : plan;
@@ -361,6 +395,35 @@ export default function GestureVideoPlayer({
           />
           Your browser does not support the video tag.
         </video>
+
+        {/* Quality selector dropdown */}
+        <div className="absolute bottom-14 right-2 z-20">
+          <button
+            onClick={() => setShowQualityMenu((s) => !s)}
+            className="bg-black/70 text-white text-xs px-2 py-1 rounded hover:bg-black/90"
+          >
+            {currentQuality === "auto" ? "Auto" : currentQuality}
+          </button>
+          {showQualityMenu && (
+            <div className="absolute bottom-full right-0 mb-1 bg-black/90 rounded overflow-hidden min-w-[100px]">
+              <button
+                onClick={() => handleQualityChange("auto", video?.filepath || "")}
+                className="block w-full text-left text-white text-xs px-3 py-2 hover:bg-white/10"
+              >
+                Auto
+              </button>
+              {Object.entries(qualities).map(([label, url]) => (
+                <button
+                  key={label}
+                  onClick={() => handleQualityChange(label, url)}
+                  className="block w-full text-left text-white text-xs px-3 py-2 hover:bg-white/10"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Gesture Zones (top area only, native controls remain untouched).
             pointer-events-none by default so a lone tap passes straight
