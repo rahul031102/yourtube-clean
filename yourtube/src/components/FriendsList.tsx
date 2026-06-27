@@ -176,7 +176,7 @@ export default function FriendsList({ mode }: FriendsListProps) {
                   ) : (
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-2">
-                        <div className="font-medium truncate">
+                        <div className="font-medium truncate max-w-[150px] sm:max-w-none">
                           {displayName}
                           {hasNickname && <span className="text-xs text-gray-400 ml-1">(nickname)</span>}
                         </div>

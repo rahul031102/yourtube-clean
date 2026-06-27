@@ -231,7 +231,7 @@ export default function DownloadsContent() {
           return (
             <div key={item._id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 group rounded-lg border p-4">
               <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-                <div className="relative w-full sm:w-40 aspect-video bg-muted rounded overflow-hidden">
+                <div className="relative w-28 sm:w-40 aspect-video bg-muted rounded overflow-hidden">
                   {item.videoid?.thumbnail ? (
                     <img
                       src={item.videoid.thumbnail}

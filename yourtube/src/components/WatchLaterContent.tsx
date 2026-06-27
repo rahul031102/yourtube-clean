@@ -87,7 +87,7 @@ export default function WatchLaterContent() {
         {watchLater.filter((item) => item.videoid).map((item) => (
           <div key={item._id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 group">
             <Link href={`/watch/${item.videoid._id}`} className="flex-shrink-0">
-              <div className="relative w-full sm:w-40 aspect-video bg-muted rounded overflow-hidden">
+              <div className="relative w-28 sm:w-40 aspect-video bg-muted rounded overflow-hidden">
                 <video
                   src={item.videoid?.filepath}
                   className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"

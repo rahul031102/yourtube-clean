@@ -12,7 +12,7 @@ const CallsPage = () => {
   }, [router.query.mode]);
 
   return (
-    <main className="flex-1 p-6">
+    <main className="flex-1 p-3 sm:p-6">
       <div className="max-w-3xl mx-auto">
         <FriendsList mode={mode} />
       </div>
