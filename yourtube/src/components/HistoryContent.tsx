@@ -26,7 +26,8 @@ export default function HistoryContent() {
     if (user) {
       loadHistory();
     } else {
-      setLoading(true);
+      setHistory([]);
+      setLoading(false);
     }
   }, [user]);
 
@@ -34,6 +35,7 @@ export default function HistoryContent() {
     if (!user) return;
 
     try {
+      setLoading(true);
       const historyData = await axiosInstance.get(`/history/${user?._id}`);
       setHistory(historyData.data);
     } catch (error) {
