@@ -29,7 +29,6 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import OtpDialog from "@/components/OtpDialog";
 import { Toaster } from "@/components/ui/sonner";
-// @ts-expect-error CSS import
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { useState } from "react";
