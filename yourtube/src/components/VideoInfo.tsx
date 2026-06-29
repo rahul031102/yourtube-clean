@@ -118,7 +118,7 @@ const VideoInfo = ({ video }: any) => {
         );
         setIsLiked(alreadyLiked);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user, video?._id]);
 
   useEffect(() => {
@@ -144,7 +144,7 @@ const VideoInfo = ({ video }: any) => {
         );
         setIsWatchLater(already);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user?._id, video?._id]);
 
   useEffect(() => {
@@ -335,21 +335,21 @@ const VideoInfo = ({ video }: any) => {
           <Button className="ml-4">Subscribe</Button>
         </div> */}
 
-          
-<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-  <div className="flex items-center gap-3 sm:gap-4">
-    <Avatar className="w-10 h-10 shrink-0">
-      <AvatarFallback>{video.videochanel[0]}</AvatarFallback>
-    </Avatar>
-    <div className="min-w-0">
-      <h3 className="font-medium truncate">{video.videochanel}</h3>
-      <p className="text-sm text-gray-600">1.2M subscribers</p>
-    </div>
-    <Button className="ml-2 sm:ml-4 shrink-0">Subscribe</Button>
-  </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Avatar className="w-10 h-10 shrink-0">
+            <AvatarFallback>{video.videochanel[0]}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <h3 className="font-medium truncate">{video.videochanel}</h3>
+            <p className="text-sm text-gray-600">1.2M subscribers</p>
+          </div>
+          <Button className="ml-2 sm:ml-4 shrink-0">Subscribe</Button>
+        </div>
 
         {/* <div className="flex items-center gap-2"> */}
-         <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto sm:flex-wrap scrollbar-hide whitespace-nowrap -mx-1 px-1 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto sm:flex-wrap scrollbar-hide whitespace-nowrap -mx-1 px-1 sm:mx-0 sm:px-0">
           {/* <div className="flex items-center gap-1 sm:gap-2 flex-wrap"> */}
           <div className="flex items-center bg-muted rounded-full">
             <Button
@@ -359,9 +359,8 @@ const VideoInfo = ({ video }: any) => {
               onClick={handleLike}
             >
               <ThumbsUp
-                className={`w-5 h-5 mr-2 ${
-                  isLiked ? "fill-black text-black" : ""
-                }`}
+                className={`w-5 h-5 mr-2 ${isLiked ? "fill-black text-black" : ""
+                  }`}
               />
               {likes.toLocaleString()}
             </Button>
@@ -373,9 +372,8 @@ const VideoInfo = ({ video }: any) => {
               onClick={handleDislike}
             >
               <ThumbsDown
-                className={`w-5 h-5 mr-2 ${
-                  isDisliked ? "fill-black text-black" : ""
-                }`}
+                className={`w-5 h-5 mr-2 ${isDisliked ? "fill-black text-black" : ""
+                  }`}
               />
               {dislikes.toLocaleString()}
             </Button>
@@ -383,9 +381,8 @@ const VideoInfo = ({ video }: any) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`bg-muted rounded-full shrink-0 transition-colors ${
-              isWatchLater ? "text-blue-500 bg-blue-500/10" : ""
-            }`}
+            className={`bg-muted rounded-full shrink-0 transition-colors ${isWatchLater ? "text-blue-500 bg-blue-500/10" : ""
+              }`}
             onClick={handleWatchLater}
           >
             <Clock className={`w-5 h-5 mr-2 ${isWatchLater ? "fill-blue-500" : ""}`} />
@@ -420,15 +417,19 @@ const VideoInfo = ({ video }: any) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {String(user?._id) === String(video.uploader) && (
-                <DropdownMenuItem
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-red-600 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Video
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                onClick={() => {
+                  if (String(user?._id) === String(video.uploader)) {
+                    setShowDeleteDialog(true);
+                  } else {
+                    toast.error("only the actual uploader of this video can perform this action.");
+                  }
+                }}
+                className="text-red-600 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Video
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -450,9 +451,8 @@ const VideoInfo = ({ video }: any) => {
           </span>
         </div>
         <p
-          className={`text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap ${
-            showFullDescription ? "" : "line-clamp-3"
-          }`}
+          className={`text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap ${showFullDescription ? "" : "line-clamp-3"
+            }`}
         >
           {video.description || "No description provided."}
         </p>
