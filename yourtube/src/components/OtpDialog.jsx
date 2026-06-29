@@ -110,7 +110,9 @@ export default function OtpDialog() {
   <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" size="sm" onClick={() => onResend(false)} disabled={resending}>{resending ? "Resending..." : "Resend"}</Button>
-      <Button variant="ghost" size="sm" onClick={() => onResend(true)} disabled={resending}>Send to email</Button>
+      {pendingAuth.channel === "sms" && (
+        <Button variant="ghost" size="sm" onClick={() => onResend(true)} disabled={resending}>Send to email</Button>
+      )}
     </div>
     <div className="flex gap-2 sm:ml-auto">
       <Button variant="outline" className="flex-1 sm:flex-initial" onClick={() => { cancelOtp(); }}>
