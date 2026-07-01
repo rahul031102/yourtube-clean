@@ -349,7 +349,7 @@ const VideoInfo = ({ video }: any) => {
         </div>
 
         {/* <div className="flex items-center gap-2"> */}
-        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto sm:flex-wrap scrollbar-hide whitespace-nowrap -mx-1 px-1 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto flex-nowrap scrollbar-hide whitespace-nowrap -mx-1 px-1 sm:mx-0 sm:px-0">
           {/* <div className="flex items-center gap-1 sm:gap-2 flex-wrap"> */}
           <div className="flex items-center bg-muted rounded-full">
             <Button
