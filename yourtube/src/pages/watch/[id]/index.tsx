@@ -14,6 +14,7 @@ const index = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!router.isReady) return;
     const fetchVideo = async () => {
       if (!id || typeof id !== "string") return;
       try {
@@ -28,7 +29,7 @@ const index = () => {
       }
     };
     fetchVideo();
-  }, [id]);
+  }, [id, router.isReady]);
 
   if (loading) {
     return <div>Loading..</div>;

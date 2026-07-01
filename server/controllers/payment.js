@@ -97,8 +97,14 @@ export const verifyPayment = async (req, res) => {
   }
 
   try {
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) {
+      console.error("RAZORPAY_KEY_SECRET is not configured on the server.");
+      return res.status(500).json({ message: "Payment gateway misconfigured." });
+    }
+
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .createHmac("sha256", secret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 

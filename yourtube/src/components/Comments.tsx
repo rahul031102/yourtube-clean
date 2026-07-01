@@ -25,9 +25,8 @@ const commentValidation = (text: string) => {
   const trimmed = text.trim();
   if (trimmed.length === 0 || trimmed.length > 2000) return false;
 
-  // Allow Unicode letters, numbers, spaces and a small set of common punctuation.
-  // Disallow other special characters like @#$%^&*<>/{}[]|~` etc.
-  const allowedPattern = /^[\p{L}\p{N}\s.,?!'"():;+\-]+$/u;
+  // Allow all characters except HTML angle brackets to prevent script injections
+  const allowedPattern = /^[^<>]+$/;
   return allowedPattern.test(trimmed);
 };
 

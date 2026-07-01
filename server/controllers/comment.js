@@ -6,10 +6,8 @@ const sanitizeComment = (text) => {
   const trimmed = text.trim();
   if (trimmed.length === 0 || trimmed.length > 2000) return false;
 
-  // Allow Unicode letters, numbers, spaces and a small set of common punctuation.
-  // Disallow other special characters (e.g. @#$%^&*<>/{}[]|~` etc.).
-  // Uses Unicode property escapes for letters and numbers.
-  const allowedPattern = /^[\p{L}\p{N}\s.,?!'"():;+\-]+$/u;
+  // Allow all characters except HTML angle brackets to prevent script injections
+  const allowedPattern = /^[^<>]+$/;
   if (!allowedPattern.test(trimmed)) return false;
 
   return true;
