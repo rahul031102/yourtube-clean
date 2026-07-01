@@ -161,8 +161,20 @@ export default function registerSignaling(io) {
 
     socket.on("disconnect", () => {
       console.log("[signaling] socket disconnected", socket.id);
-      if (socket.data?.userId) markOffline(socket.data.userId);
-      socket.broadcast.emit("user-left", { id: socket.id, userId: socket.data?.userId });
+      const disconnectedUserId = socket.data?.userId;
+      const disconnectedSocketId = socket.id;
+      if (disconnectedUserId) {
+        setTimeout(() => {
+          // only mark offline if no new socket re-registered for this user
+          const stillConnected = Array.from(io.sockets.sockets.values()).some(
+            s => String(s.data?.userId) === String(disconnectedUserId) && s.id !== disconnectedSocketId
+          );
+          if (!stillConnected) {
+            markOffline(disconnectedUserId);
+            io.emit("user-left", { id: disconnectedSocketId, userId: disconnectedUserId });
+          }
+        }, 3000);
+      }
     });
   });
 }

@@ -204,6 +204,7 @@ const VideoCallPage = () => {
     };
 
     const onResponse = ({ accepted }: any) => {
+      socket.off("call-response", onResponse);
       if (accepted) {
         setupPeerAndMedia();
       } else {
@@ -240,6 +241,13 @@ const VideoCallPage = () => {
       socket.off("answer");
       socket.off("ice-candidate");
       socket.off("call-response", onResponse);
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
+        localStreamRef.current = null;
+      }
+      if (localRef.current) localRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
       cleanupPeer();
     };
   }, [roomId, role, mode, router]);
@@ -255,6 +263,13 @@ const VideoCallPage = () => {
   useEffect(() => {
     const socket = getSocket();
     const onCallEnded = () => {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
+        localStreamRef.current = null;
+      }
+      if (localRef.current) localRef.current.srcObject = null;
+      if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
       if (pcRef.current) {
         pcRef.current.getSenders().forEach((s) => s.track?.stop());
         pcRef.current.close();
