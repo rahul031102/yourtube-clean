@@ -35,7 +35,7 @@ const Sidebar = ({ open = false, onClose }: SidebarProps) => {
         />
       )}
 
-      <aside className="hidden md:flex md:sticky md:top-16 md:h-[calc(100vh-4rem)] md:translate-x-0 md:z-auto w-64 bg-background text-foreground border-r p-2 flex-col overflow-y-auto shrink-0">
+      <aside className="hidden md:flex md:fixed md:top-16 md:left-0 md:h-[calc(100vh-4rem)] md:translate-x-0 md:z-20 w-64 bg-background text-foreground border-r p-2 flex-col overflow-y-auto shrink-0">
         <nav className="space-y-1">
           <Link href="/">
             <Button variant="ghost" className="w-full justify-start">
