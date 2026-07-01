@@ -77,16 +77,15 @@ export default function registerSignaling(io) {
     // call request flow: caller -> server -> target (incoming-call)
     socket.on("call-request", ({ targetUserId, roomId, fromUserId, mode, fromName, fromImage }) => {
       // ensure caller is registered and matches the declared fromUserId
-
-      if (!socket.data?.userId) {
-        // if (!socket.data?.userId || socket.data.userId !== fromUserId) {
+      if (!socket.data?.userId || socket.data.userId !== fromUserId) {
         socket.emit("call-error", { reason: "INVALID_CALLER" });
         return;
       }
-      // find socket for target
-      const targetSocket = Array.from(io.sockets.sockets.values()).find(s => String(s.data?.userId) === String(targetUserId));
-      if (targetSocket) {
-        targetSocket.emit("incoming-call", { fromUserId, roomId, mode, fromName, fromImage });
+      // find sockets for target
+      const targetSockets = Array.from(io.sockets.sockets.values())
+        .filter(s => String(s.data?.userId) === String(targetUserId));
+      if (targetSockets.length) {
+        targetSockets.forEach(s => s.emit("incoming-call", { fromUserId, roomId, mode, fromName, fromImage }));
       } else {
         // notify caller that target unavailable
         socket.emit("call-unavailable", { targetUserId });
@@ -100,10 +99,10 @@ export default function registerSignaling(io) {
         socket.emit("call-error", { reason: "NOT_REGISTERED" });
         return;
       }
-      const callerSocket = Array.from(io.sockets.sockets.values()).find(s => String(s.data?.userId) === String(fromUserId));
-      if (callerSocket) {
-        callerSocket.emit("call-response", { accepted, roomId, targetUserId });
-      }
+      const callerSockets = Array.from(io.sockets.sockets.values())
+        .filter(s => String(s.data?.userId) === String(fromUserId));
+      callerSockets.forEach(s => s.emit("call-response", { accepted, roomId, targetUserId }));
+
       // if accepted, create a call log entry and store mapping
       if (accepted) {
         try {
@@ -114,6 +113,14 @@ export default function registerSignaling(io) {
           console.warn("createCallLog failed", e);
         }
       }
+    });
+
+    // caller cancels before the callee has responded
+    socket.on("call-cancel", ({ targetUserId, roomId }) => {
+      if (!socket.data?.userId) return;
+      const targetSockets = Array.from(io.sockets.sockets.values())
+        .filter(s => String(s.data?.userId) === String(targetUserId));
+      targetSockets.forEach(s => s.emit("call-cancelled", { roomId }));
     });
 
     socket.on("offer", ({ target, sdp }) => {

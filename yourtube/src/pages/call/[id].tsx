@@ -102,6 +102,9 @@ const VideoCallPage = () => {
         const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
         if (!mounted) return;
 
+        if (localStreamRef.current) {
+          localStreamRef.current.getTracks().forEach((t) => t.stop());
+        }
         localStreamRef.current = stream;
         cameraTrackRef.current = currentMode === "video" ? stream.getVideoTracks()[0] || null : null;
 
@@ -341,6 +344,7 @@ const VideoCallPage = () => {
   const endCall = () => {
     const socket = getSocket();
     socket.emit("end-call", { roomId: roomId || targetId });
+    socket.emit("call-cancel", { targetUserId: targetId, roomId: roomId || targetId });
     if (pcRef.current) {
       pcRef.current.getSenders().forEach((s) => s.track?.stop());
       pcRef.current.close();

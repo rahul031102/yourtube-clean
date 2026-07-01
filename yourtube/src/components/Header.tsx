@@ -117,6 +117,11 @@ const Header = ({ onMenuClick }: HeaderProps) => {
     };
     socket.on("call-unavailable", onUnavailable);
 
+    const onCancelled = ({ roomId }: any) => {
+      setIncoming((prev: any) => (prev?.roomId === roomId ? null : prev));
+    };
+    socket.on("call-cancelled", onCancelled);
+
     const onRegisterFailed = ({ reason }: any) => {
       console.warn("socket register failed", reason);
     };
@@ -130,6 +135,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       socket.off("connect", onConnect);
       socket.off("incoming-call", onIncoming);
       socket.off("call-unavailable", onUnavailable);
+      socket.off("call-cancelled", onCancelled);
       socket.off("register-failed", onRegisterFailed);
       socket.off("register-success", onRegisterSuccess);
     };
