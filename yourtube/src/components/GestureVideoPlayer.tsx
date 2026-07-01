@@ -191,7 +191,7 @@ export default function GestureVideoPlayer({ video, allVideos }: GestureVideoPla
     showFeedback("Closing...", <X className="w-10 h-10" />);
     setIsClosing(true);
     try { window.close(); } catch { }
-    setTimeout(() => router.push("/"), 1500);
+    setTimeout(() => router.replace("/"), 1500);
   }, [router, showFeedback]);
 
   const toggleFullscreen = useCallback(() => {

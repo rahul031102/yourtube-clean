@@ -212,7 +212,7 @@ const VideoCallPage = () => {
         setupPeerAndMedia();
       } else {
         toast.error("Call declined", { description: "The recipient declined your call." });
-        router.push("/");
+        router.replace("/");
       }
     };
 
@@ -282,7 +282,7 @@ const VideoCallPage = () => {
         clearInterval(callTimerRef.current);
         callTimerRef.current = null;
       }
-      router.push("/");
+      router.replace("/");
     };
     socket.on("call-ended", onCallEnded);
     return () => {
@@ -354,7 +354,7 @@ const VideoCallPage = () => {
       clearInterval(callTimerRef.current);
       callTimerRef.current = null;
     }
-    router.push("/");
+    router.replace("/");
   };
 
   const toggleScreenShare = async () => {
