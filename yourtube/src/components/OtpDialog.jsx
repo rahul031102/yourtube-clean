@@ -107,21 +107,32 @@ export default function OtpDialog() {
               )}
             </div>
 
-            <DialogFooter className="flex gap-2 w-full sm:w-auto">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 w-full">
               <Button
-                variant="outline"
-                className="flex-1 rounded-lg"
-                onClick={cancelOtp}
+                variant="ghost"
+                size="sm"
+                onClick={() => onResend(true)}
+                disabled={resending}
+                className="text-xs text-muted-foreground hover:text-foreground self-center sm:self-start"
               >
-                Cancel
+                {resending ? "Sending..." : "Verify using email instead"}
               </Button>
-              <Button
-                className="flex-1 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-                onClick={onSavePhone}
-                disabled={savingPhone}
-              >
-                {savingPhone ? "Sending..." : "Send OTP"}
-              </Button>
+              <div className="flex gap-2 sm:ml-auto w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-initial rounded-lg"
+                  onClick={cancelOtp}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 sm:flex-initial rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                  onClick={onSavePhone}
+                  disabled={savingPhone}
+                >
+                  {savingPhone ? "Sending..." : "Send OTP"}
+                </Button>
+              </div>
             </DialogFooter>
           </>
         ) : (

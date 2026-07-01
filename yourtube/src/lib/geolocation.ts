@@ -12,14 +12,27 @@ const normalize = (v?: string) => (v || "").trim().toLowerCase();
 
 export async function fetchRegion() {
   try {
-    const { data } = await axiosInstance.get("/user/location");
+    // Try browser-side geolocation API lookup first for maximum accuracy
+    const res = await fetch("https://ipapi.co/json");
+    if (!res.ok) throw new Error();
+    const data = await res.json();
     return {
       region: normalize(data?.region),
-      country: normalize(data?.country),
-      countryCode: normalize(data?.countryCode),
+      country: normalize(data?.country_name),
+      countryCode: normalize(data?.country_code),
     };
   } catch (e) {
-    return null;
+    // Fall back to server-side location detection if browser API fails or is rate-limited
+    try {
+      const { data } = await axiosInstance.get("/user/location");
+      return {
+        region: normalize(data?.region),
+        country: normalize(data?.country),
+        countryCode: normalize(data?.countryCode),
+      };
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -37,7 +50,6 @@ export function isBetween10and12IST(date = new Date()) {
     const h = d.getHours();
     return h >= 10 && h < 12;
   } catch (e) {
-    // fallback using offset
     const utc = date.getTime() + date.getTimezoneOffset() * 60000;
     const istOffset = 5.5 * 60 * 60000;
     const ist = new Date(utc + istOffset);
