@@ -113,7 +113,7 @@ const Header = ({ onMenuClick }: HeaderProps) => {
 
     const onUnavailable = ({ targetUserId }: any) => {
       toast.error("User is unavailable or offline");
-      router.push("/calls");
+      router.replace("/calls");
     };
     socket.on("call-unavailable", onUnavailable);
 

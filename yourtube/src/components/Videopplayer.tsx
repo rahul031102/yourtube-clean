@@ -79,7 +79,7 @@ export default function VideoPlayer({ video, allVideos }: VideoPlayerProps) {
     }
     setSiteClosed(true);
     setTimeout(() => {
-      router.push("/");
+      router.replace("/");
     }, 800);
   };
 
